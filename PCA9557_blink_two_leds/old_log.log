@@ -1,0 +1,65 @@
+commit 6331d73748607db33262ae0a0f730f44c76075fb
+Author: hmauroy <hmauroy@gmail.com>
+Date:   Sat Mar 16 08:42:59 2024 +0100
+
+    PCA9557 measuring of transmission delay for Arduino. It is around 140 microseconds for a command to be sent.
+
+commit 6adf6fe06008e419eec11ac669116e87ac729732
+Author: hmauroy <hmauroy@gmail.com>
+Date:   Sat Mar 16 08:25:01 2024 +0100
+
+    PCA9557: Added code that reads the states of the io pins io2 and io5 during operation.
+
+commit 55b0b8095f33f454fd4b26640dc82c85e0b5db7a
+Author: hmauroy <hmauroy@gmail.com>
+Date:   Sat Mar 16 08:08:10 2024 +0100
+
+    PCA9557 blinks two leds. More comments explaining the code.
+
+commit 6652d7dee0a2beeb827ed202aad52a3878a4ac86
+Author: hmauroy <hmauroy@gmail.com>
+Date:   Sat Mar 16 00:43:54 2024 +0100
+
+    PCA9557 codes added to control it over I2C.
+
+commit d9e3fd26641145d698cdba8879594a4680c7f9d1
+Author: hmauroy <hmauroy@gmail.com>
+Date:   Sun Mar 10 14:55:14 2024 +0100
+
+    Tegnerobot: Added movement in a square and a triangle by using moveHeadTo(x,y).
+
+commit 48e72cb3f2c762d54e632d9ba60279b2f1edfa73
+Author: hmauroy <hmauroy@gmail.com>
+Date:   Sun Mar 10 08:11:48 2024 +0100
+
+    Tegnerobot: Switched x-axis direction due to clockwise drawing while code cefines counter clockwise ;)
+
+commit 43c956343fed209e311460c430356c8a033afaac
+Author: hmauroy <hmauroy@gmail.com>
+Date:   Sun Mar 10 01:57:21 2024 +0100
+
+    Tegnerobot: Small edit of moveHeadTo().
+
+commit ab4cedba9874f3a09fc35099e44e8be7bfd1efb5
+Author: hmauroy <hmauroy@gmail.com>
+Date:   Sun Mar 10 01:54:25 2024 +0100
+
+    Tegnerobot: Moved logic to calculate nsteps and timings from dx and dy into separate calcTimePerStep(dx,dy).
+
+commit 72bfde13abe908af12ce583e4106ca1ebb87600f
+Author: hmauroy <hmauroy@gmail.com>
+Date:   Sat Mar 9 23:49:22 2024 +0100
+
+    Tegnerobot: Deleted stepperX function.
+
+commit 840c38481324c22e50853e91388a73e5a5bb059b
+Author: hmauroy <hmauroy@gmail.com>
+Date:   Sat Mar 9 16:22:38 2024 +0100
+
+    Tegnerobot: Removed all print_Statepents in loop. stepLength 2 mm.
+
+commit 6b9b611dd57f5b0a88a4b12b170bcf0b45e99275
+Author: hmauroy <hmauroy@gmail.com>
+Date:   Sat Mar 9 16:12:36 2024 +0100
+
+    Initial commit and upload of all arduino codes.
