@@ -11,15 +11,16 @@ unsigned long flipTime = 0;
 unsigned long delayTime = 0; // Measuring delay of transmissions.
 
 // constants won't change:
-const long interval = 500;  // interval at which to blink (milliseconds)
+const long interval = 100;  // interval at which to blink (milliseconds)
 bool led1_state = true;
 bool led2_state = false; 
 
 void setup() {
-  Serial.begin(115200); // Initialize serial communication
   Wire.begin(); // Initialize I2C communication
-  Wire.setClock(400000);
+  //Wire.setClock(100000);
   configureOutput(); // Configure PCA9557 for input/output
+  Serial.begin(9600); // Initialize serial communication
+  Serial.println("Starting sending I2C");
 }
 
 void loop() {
@@ -46,7 +47,7 @@ void loop() {
     
     // Read and print the state of IO pins
     //readState();
-    //readAndPrintState();
+    readAndPrintState();
 
 
   }
@@ -55,7 +56,7 @@ void loop() {
 void configureOutput() {
   Wire.beginTransmission(PCA9557_ADDR); // Start transmission to PCA9557
   Wire.write(CONFIGURATION_MODE); // Configuration register for Ports.
-  Wire.write(0b11011011); // Set IO2 and IO5 as outputs, all other pins as inputs. 0=output, 1=input
+  Wire.write(0b11011011); // Decimal 219. Set IO2 and IO5 as outputs, all other pins as inputs. 0=output, 1=input
   Wire.endTransmission(); // End transmission
 }
 
@@ -63,18 +64,18 @@ void turnOnLEDs() {
   flipTime = micros();
   Wire.beginTransmission(PCA9557_ADDR); // Start transmission to PCA9557
   Wire.write(OUTPUT_REGISTER); // Output register for Port 0 (OLAT0)
-  Wire.write(0b00000100); // Set IO2 and IO5 high, all other pins unchanged, (io7 io6 io5 io4 io3 io2 io1 io0)
+  Wire.write(0b00000100); // Decimal 4. Set IO2 high and IO5 low, all other pins unchanged, (io7 io6 io5 io4 io3 io2 io1 io0)
   Wire.endTransmission(); // End transmission
-  delayTime = micros() - flipTime;
-  if (delayTime > 140) {
-    Serial.println(1);
-  }
+  // delayTime = micros() - flipTime;
+  // if (delayTime > 140) {
+  //   Serial.println(1);
+  // }
 }
 
 void turnOffLEDs() {
   Wire.beginTransmission(PCA9557_ADDR); // Start transmission to PCA9557
   Wire.write(OUTPUT_REGISTER); // Output register for Port 0 (OLAT0)
-  Wire.write(0b00100000); // Set all pins low
+  Wire.write(0b00100000); // Decimal 32. Set io2 low and io5 high
   Wire.endTransmission(); // End transmission
 }
 
@@ -85,6 +86,7 @@ void readState() {
 }
 
 void readAndPrintState() {
+  Serial.println("Reads register");
   Wire.beginTransmission(PCA9557_ADDR); // Start transmission to PCA9557
   Wire.write(OUTPUT_REGISTER); // Input register for Port 0 (IOP0)
   Wire.endTransmission(); // End transmission
@@ -93,8 +95,8 @@ void readAndPrintState() {
   
   if (Wire.available()) {
     byte ioState = Wire.read(); // Read the state of IO pins
-    //Serial.print("IO states: ");
-    //Serial.println(ioState);  // 4 = b00000100, 32 = b00100100
+    Serial.print("IO states: ");
+    Serial.println(ioState);  // 4 = b00000100, 32 = b00100100
     Serial.print("IO2 state: ");
     Serial.println(bitRead(ioState, 2) == 1 ? "HIGH" : "LOW"); // Check the state of IO2
     Serial.print("IO5 state: ");
