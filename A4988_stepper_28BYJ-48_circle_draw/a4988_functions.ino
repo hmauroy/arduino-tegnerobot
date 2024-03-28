@@ -78,7 +78,7 @@ void drawCircle(float xcenter, float ycenter, float radius) {
   // Move along circle of radius r.
   // 1) Divide circle into segments based on lengt of circumference and resolution limit.
   // Length og line segment = 5 mm for first try.
-  float segment_length = 2;  // Default 24 for circle with r = 30 mm
+  float segment_length = 36;  // Default 24 for circle with r = 30 mm
   float n_segments = (2*PI*radius)/segment_length;
   byte n = ceil(n_segments);
   Serial.print("n_segments Circle: ");

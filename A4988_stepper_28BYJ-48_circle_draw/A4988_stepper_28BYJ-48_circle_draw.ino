@@ -64,24 +64,29 @@ void setup() {
   
 
   // Runs only once
-  //Serial.println("Moves in a circle radius = 50!");
-  //drawCircle(20,20,50);
+  //Serial.println("Moves in a circle radius = 10!");
+  //drawCircle(20,20,10);
 
-  /*Serial.println("Moves in a circle radius = 40!");
-  drawCircle(0,0,20);
+  //Serial.println("Moves in a circle radius = 20!");
+  //drawCircle(0,0,20);
 
-  Serial.println("Moves in a circle radius = 50!");
-  drawCircle(0,0,30);*/
+  int radius = 40;
+  //Serial.print("Moves in a circle radius = ");
+  //Serial.print(radius);
+  //drawCircle(0,0,radius);
 
+  
   moveHeadTo(0,80);
   moveHeadTo(80,80);
   moveHeadTo(80,0);
   moveHeadTo(0,0);
 
+  /*
   moveHeadTo(-20,-20);
   moveHeadTo(-80,-20);
   moveHeadTo(-80,-80);
   moveHeadTo(-20,-20);
+  */
 
 }
 
