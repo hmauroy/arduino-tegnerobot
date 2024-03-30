@@ -28,17 +28,32 @@ float stepLength = pulleyCircumference / stepsPerRevolution;
 float vmax = 20.0;  // mm/s maximum speed of any axis.
 
 // Variables for positioning
-float x0 = 0;
-float y0 = 0;
-float x = 0;
-float y = 0;
+int x0 = 0;
+int y0 = 0;
+int x = 0;
+int y = 0;
+
+// Variables for "Henriks algorithm"
 float xspeed = 20.0; // mm/second. 20 mm/s is maximum linear speed.
 float yspeed = 20.0;
 bool lifted = false;
 int stepperParams[] = {1024,1024,3000,3000};  // nx, ny, timePerStepX, timePerStepY
 
-float dx = 0;
-float dy = 0;
+// Bresenhams algorithm variables
+int x1 = 0;
+int y1 = 0;
+int dx = 0;
+int dy = 0;
+int err = 0;
+int err2 = 0;
+bool isDrawing = true;
+bool pulseOn = true;
+int sx = 0;
+int sy = 0;
+unsigned long lastTime = micros(); // time in microseconds. overflows in around 70 min.
+unsigned int x_step = 0;
+unsigned int y_step = 0;
+
 float tx = 0;
 float ty = 0;
 int n_stepsX = 0;

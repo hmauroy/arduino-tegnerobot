@@ -62,19 +62,23 @@ void setup() {
 
   delay(3000);
   
-
+ /*
   // Runs only once
-  //Serial.println("Moves in a circle radius = 10!");
-  //drawCircle(20,20,10);
+  int radius = 10;
+  Serial.print("Moves in a circle radius = ");
+  Serial.print(radius);
+  drawCircle(20,20,radius);
 
-  //Serial.println("Moves in a circle radius = 20!");
-  //drawCircle(0,0,20);
+  radius = 20;
+  Serial.print("Moves in a circle radius = ");
+  Serial.print(radius);
+  drawCircle(0,0,20);
 
-  int radius = 40;
-  //Serial.print("Moves in a circle radius = ");
-  //Serial.print(radius);
-  //drawCircle(0,0,radius);
-
+  radius = 30;
+  Serial.print("Moves in a circle radius = ");
+  Serial.print(radius);
+  drawCircle(0,0,radius);
+*/
   
   moveHeadTo(0,80);
   moveHeadTo(80,80);

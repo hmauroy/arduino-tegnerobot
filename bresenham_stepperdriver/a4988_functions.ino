@@ -31,7 +31,99 @@ void lowerPen() {
   lifted = false;
 }
 
-void moveHeadTo(float targetX, float targetY) {
+void moveHeadTo(int targetX, int targetY) {
+  runSteppersBres(targetX, targetY);
+}
+
+void runSteppersBres(int targetX, int targetY) {
+  // Coordinate system is 0,0 upper left!
+  x1 = targetX;
+  y1 = targetY;
+  dx = abs(x1 - x0);
+  dy = -abs(y1 - y0);
+  err = dx + dy;
+  if (x0 < x1) {
+    sx = 1;
+  }
+  else {
+    sx = -1;
+  }
+  if (y0 < y1) {
+    sy = 1;
+  }
+  else {
+    sy = -1;
+  }
+
+  // Initializes the steps.
+  isDrawing = bresenham(); // Updates global variables dx, dy to either +1, -1 or 0 for a step or not.
+  // Start loop with intervals
+  while (isDrawing) {
+    if (lastTime - micros() >= timePerStep) {
+      if (pulseOn) {
+        lastTime = micros();
+        pulseOn = !pulseOn; // Flips logic.
+        digitalWrite(stepXpin, LOW);
+        digitalWrite(stepYpin, LOW);
+      }
+      else {
+        lastTime = micros();
+        if (dx < 0) {
+          digitalWrite(dirXpin, LOW); // CCW
+        }
+        else {
+          digitalWrite(dirXpin, HIGH); // CW
+        }
+        if (dy < 0) {
+          digitalWrite(dirYpin, LOW); // CCW
+        }
+        else {
+          digitalWrite(dirYpin, HIGH); // CW
+        }
+        digitalWrite(stepXpin, abs(dx)); // writes either a 1 (HIGH) or 0 (LOW) dependent on result from bresenham. dx can be +1, -1, 0.
+        digitalWrite(stepYpin, abs(dy));
+        pulseOn = !pulseOn; // flips logic
+        // Calculate next step while we wait for pulse to become low
+        isDrawing = bresenham();
+      }
+    }
+        
+  } // END while (isDrawing)
+
+}
+
+bool bresenham() {
+  // Calculates steps in x and y directions. 0, -1 or 1
+  // Updates global variables dx, dy, and error variable err.
+  err2 = 2 * err;
+  dx = 0;
+  dy = 0;
+
+  if (x0 == x1 && y0 == y1) {
+    return false;
+  }
+  if (err2 >= dy) {
+    if (x0 == x1) {
+      return false;
+    }
+    // Update step and error
+    err = err + dy;
+    x0 = x0 + sx;
+    dx = sx;
+  }
+  if (err2 <= dx) {
+    if (y0 == y1) {
+      return false;
+    }
+    err = err + dx;
+    y0 = y0 + sy;
+    dy = sy;
+  }
+  return true;
+
+}
+
+void moveHeadTo_old(float targetX, float targetY) {
 
   /*
    Moves to coordinate (x,y), then sets x0 and y0 to these values.
@@ -175,7 +267,7 @@ void calcTimePerStep(float dx, float dy) {
   Serial.println(buffer);*/
   // check if movement:
   if (abs(dx) > 0.00001) {
-    n_stepsX = round(dx / stepLength);  // MULTIPLY stepLength WITH SCALING FACTOR 6.1 %
+    n_stepsX = round(dx / stepLength);
   }
   if (abs(dy) > 0.00001) {
     n_stepsY = round(dy / stepLength);
