@@ -21,7 +21,7 @@
 
 unsigned int stepsPerRevolution = 4*2048; // 1/4 stepping => 8192 steps
 float timePerStepBuffer = 500.0;
-unsigned int timePerStep = 1000;
+unsigned long timePerStep = 500;
 float pulleyRadius = 33.0;  // radius of pulleys on stepper motors. Determines linear speed.
 float pulleyCircumference = 2*PI*pulleyRadius;
 float stepLength = pulleyCircumference / stepsPerRevolution;
@@ -51,8 +51,8 @@ bool pulseOn = true;
 int sx = 0;
 int sy = 0;
 unsigned long lastTime = micros(); // time in microseconds. overflows in around 70 min.
-unsigned int x_step = 0;
-unsigned int y_step = 0;
+int x_step = 0;
+int y_step = 0;
 
 float tx = 0;
 float ty = 0;
@@ -90,10 +90,9 @@ void setup() {
   //Serial.print(radius);
   //drawCircle(0,0,radius);
 
-  
-  moveHeadTo(0,80);
-  moveHeadTo(80,80);
-  moveHeadTo(80,0);
+  moveHeadTo(1000,5000);
+  moveHeadTo(2000,3000);
+  moveHeadTo(5000,500);
   moveHeadTo(0,0);
 
   /*

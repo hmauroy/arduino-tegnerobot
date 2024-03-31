@@ -42,6 +42,8 @@ void runSteppersBres(int targetX, int targetY) {
   dx = abs(x1 - x0);
   dy = -abs(y1 - y0);
   err = dx + dy;
+  String message = "dx, dy " + String(dx) + "," + String(-dy);
+  Serial.println(message);
   if (x0 < x1) {
     sx = 1;
   }
@@ -59,7 +61,10 @@ void runSteppersBres(int targetX, int targetY) {
   isDrawing = bresenham(); // Updates global variables dx, dy to either +1, -1 or 0 for a step or not.
   // Start loop with intervals
   while (isDrawing) {
-    if (lastTime - micros() >= timePerStep) {
+    if (micros() - lastTime >= timePerStep) {
+      //Serial.print("pulseOn, dx, dy: ");
+      //String str1 = String(pulseOn) + "," + String(dx) + "," + String(dy);
+      //Serial.println(str1);
       if (pulseOn) {
         lastTime = micros();
         pulseOn = !pulseOn; // Flips logic.
@@ -68,20 +73,20 @@ void runSteppersBres(int targetX, int targetY) {
       }
       else {
         lastTime = micros();
-        if (dx < 0) {
+        if (x_step < 0) {
           digitalWrite(dirXpin, LOW); // CCW
         }
         else {
           digitalWrite(dirXpin, HIGH); // CW
         }
-        if (dy < 0) {
+        if (y_step < 0) {
           digitalWrite(dirYpin, LOW); // CCW
         }
         else {
           digitalWrite(dirYpin, HIGH); // CW
         }
-        digitalWrite(stepXpin, abs(dx)); // writes either a 1 (HIGH) or 0 (LOW) dependent on result from bresenham. dx can be +1, -1, 0.
-        digitalWrite(stepYpin, abs(dy));
+        digitalWrite(stepXpin, abs(x_step)); // writes either a 1 (HIGH) or 0 (LOW) dependent on result from bresenham. dx can be +1, -1, 0.
+        digitalWrite(stepYpin, abs(y_step));
         pulseOn = !pulseOn; // flips logic
         // Calculate next step while we wait for pulse to become low
         isDrawing = bresenham();
@@ -89,6 +94,11 @@ void runSteppersBres(int targetX, int targetY) {
     }
         
   } // END while (isDrawing)
+  Serial.println("Finished line");
+  Serial.print("x0,y0: ");
+  Serial.print(x0);
+  Serial.print(",");
+  Serial.println(y0);
 
 }
 
@@ -96,8 +106,8 @@ bool bresenham() {
   // Calculates steps in x and y directions. 0, -1 or 1
   // Updates global variables dx, dy, and error variable err.
   err2 = 2 * err;
-  dx = 0;
-  dy = 0;
+  x_step = 0;
+  y_step = 0;
 
   if (x0 == x1 && y0 == y1) {
     return false;
@@ -109,7 +119,7 @@ bool bresenham() {
     // Update step and error
     err = err + dy;
     x0 = x0 + sx;
-    dx = sx;
+    x_step = sx;
   }
   if (err2 <= dx) {
     if (y0 == y1) {
@@ -117,8 +127,10 @@ bool bresenham() {
     }
     err = err + dx;
     y0 = y0 + sy;
-    dy = sy;
+    y_step = sy;
   }
+  //String str1 = "err, x_step, y_step, x0, y0: " + String(err) + "," + String(x_step) + "," + String(y_step) + "," + String(x0) + "," + String(y0);
+  //Serial.println(str1);
   return true;
 
 }
