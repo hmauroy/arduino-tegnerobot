@@ -90,9 +90,9 @@ void setup() {
   //Serial.print(radius);
   //drawCircle(0,0,radius);
 
-  moveHeadTo(1000,5000);
-  moveHeadTo(2000,3000);
-  moveHeadTo(5000,500);
+  moveHeadTo(0,5000);
+  moveHeadTo(5000,5000);
+  moveHeadTo(5000,0);
   moveHeadTo(0,0);
 
   /*
