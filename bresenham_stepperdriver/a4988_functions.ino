@@ -32,7 +32,11 @@ void lowerPen() {
 }
 
 void moveHeadTo(int targetX, int targetY) {
-  runSteppersBres(targetX, targetY);
+  float x_steps = targetX / (xCalibration / 5000);
+  x = round(x_steps);
+  float y_steps = targetY / (yCalibration / 5000);
+  y = round(y_steps);
+  runSteppersBres(x, y);
 }
 
 void runSteppersBres(int targetX, int targetY) {
@@ -135,6 +139,57 @@ bool bresenham() {
 
 }
 
+void drawCircle(float xcenter, float ycenter, float radius) {
+  liftPen();
+  // Move to xy_start.
+  moveHeadTo(xcenter+radius, ycenter); // NB! + radius of circle!
+  // Move along circle of radius r.
+  // 1) Divide circle into segments based on lengt of circumference and resolution limit.
+  // Length og line segment = 5 mm for first try.
+  float segment_length = 30;  // Default 24 for circle with r = 30 mm
+  float n_segments = (2*PI*radius)/segment_length;
+  byte n = ceil(n_segments);
+  Serial.print("n_segments Circle: ");
+  Serial.println(n);
+  float d_theta = 2*PI/n;
+  float theta = 0;
+
+  // Initialize coordinates
+  float x_start = radius;
+  float y_start = 0;
+  float x_new = 0;
+  float y_new = 0;
+
+
+  // 2) Run for loop of n line segments.
+  for (byte i=0; i < n; i++) {
+    /*
+    Serial.println("--------------");
+    Serial.print("segment: ");
+    Serial.print(i+1);
+    Serial.print(": ");
+    String positions = "x0,y0: " + String(x0) + "," + String(y0);
+    Serial.println(positions);*/
+    theta = theta + d_theta;
+    x_new = radius * cos(theta);
+    y_new = radius * sin(theta);
+    /*String target = "Target x,y: " + String(x) + "," + String(y);
+    Serial.println(target);*/
+    
+    // Move using bresenham-stepper
+    moveHeadTo(x_new, y_new);
+    
+
+    // Update integer coordinates
+    x0 = x_new;
+    y0 = y_new;
+    
+
+  }
+  String str4 = "Head position after Circle: x,y: " + String(x0) + "," + String(y0);
+  Serial.println(str4);
+}
+
 void moveHeadTo_old(float targetX, float targetY) {
 
   /*
@@ -149,8 +204,8 @@ void moveHeadTo_old(float targetX, float targetY) {
   // Calculate distances, number of steps and timePerStep and save to global array.
   calcTimePerStep(dx, dy);
 
-  n_stepsX = stepperParams[0];
-  n_stepsY = stepperParams[1];
+  int n_stepsX = stepperParams[0];
+  int n_stepsY = stepperParams[1];
   timePerStepX = stepperParams[2];
   timePerStepY = stepperParams[3];
 
@@ -175,7 +230,7 @@ void moveHeadTo_old(float targetX, float targetY) {
   
 }
 
-void drawCircle(float xcenter, float ycenter, float radius) {
+void drawCircle_old(float xcenter, float ycenter, float radius) {
   liftPen();
   // Move to xy_start.
   moveHeadTo(xcenter+radius, ycenter); // NB! + radius of circle!
@@ -219,8 +274,8 @@ void drawCircle(float xcenter, float ycenter, float radius) {
     String temp2 = String(timePerStepX) + "," + String(timePerStepY);
     Serial.println(temp2);*/
 
-    n_stepsX = stepperParams[0];
-    n_stepsY = stepperParams[1];
+    int n_stepsX = stepperParams[0];
+    int n_stepsY = stepperParams[1];
     timePerStepX = stepperParams[2];
     timePerStepY = stepperParams[3];
 
@@ -243,8 +298,8 @@ void calcTimePerStep(float dx, float dy) {
     Calculates distances, nsteps + timings.
     Saves to global array.
   */
-  n_stepsX = 0;
-  n_stepsY = 0;
+  int n_stepsX = 0;
+  int n_stepsY = 0;
   timePerStepX = 0;
   timePerStepY = 0;
   // Which axis is furthest away.

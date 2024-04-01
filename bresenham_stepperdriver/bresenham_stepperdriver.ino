@@ -27,21 +27,27 @@ float pulleyCircumference = 2*PI*pulleyRadius;
 float stepLength = pulleyCircumference / stepsPerRevolution;
 float vmax = 20.0;  // mm/s maximum speed of any axis.
 
-// Variables for positioning
-int x0 = 0;
-int y0 = 0;
-int x = 0;
-int y = 0;
+
 
 // Variables for "Henriks algorithm"
 float xspeed = 20.0; // mm/second. 20 mm/s is maximum linear speed.
 float yspeed = 20.0;
 bool lifted = false;
 int stepperParams[] = {1024,1024,3000,3000};  // nx, ny, timePerStepX, timePerStepY
+float tx = 0;
+float ty = 0;
+
+float timePerStepX = 6000;
+float timePerStepY = 6000;
 
 // Bresenhams algorithm variables
+// Variables for positioning
+int x0 = 0;
+int y0 = 0;
 int x1 = 0;
 int y1 = 0;
+int x = 0;
+int y = 0;
 int dx = 0;
 int dy = 0;
 int err = 0;
@@ -53,14 +59,11 @@ int sy = 0;
 unsigned long lastTime = micros(); // time in microseconds. overflows in around 70 min.
 int x_step = 0;
 int y_step = 0;
+float xCalibration = 64.6;  // Distance for 5000 steps in x-direction.
+float yCalibration = 62.0;  // Distance for 5000 steps in y-direction.
 
-float tx = 0;
-float ty = 0;
-int n_stepsX = 0;
-int n_stepsY = 0;
 
-float timePerStepX = 6000;
-float timePerStepY = 6000;
+
 
 
 void setup() {
@@ -85,15 +88,29 @@ void setup() {
   //Serial.println("Moves in a circle radius = 20!");
   //drawCircle(0,0,20);
 
-  int radius = 40;
-  //Serial.print("Moves in a circle radius = ");
-  //Serial.print(radius);
-  //drawCircle(0,0,radius);
+  int radius = 30;
+  Serial.print("Moves in a circle radius = ");
+  Serial.print(radius);
+  drawCircle(0,0,radius);
 
+  /*
+  for (int i =0; i<5; i++) {
+    moveHeadTo(0,60);
+    moveHeadTo(60,60);
+    moveHeadTo(60,0);
+    moveHeadTo(0,0);
+  }
+
+  */
+  
+ 
+  /*
+  // Absolute steps
   moveHeadTo(0,5000);
   moveHeadTo(5000,5000);
   moveHeadTo(5000,0);
   moveHeadTo(0,0);
+  */
 
   /*
   moveHeadTo(-20,-20);
