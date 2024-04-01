@@ -46,7 +46,7 @@ void runSteppersBres(int targetX, int targetY) {
   dx = abs(x1 - x0);
   dy = -abs(y1 - y0);
   err = dx + dy;
-  String message = "dx, dy " + String(dx) + "," + String(-dy);
+  String message = "dx, dy " + String(x1-x0) + "," + String(y1-y0);
   Serial.println(message);
   if (x0 < x1) {
     sx = 1;
@@ -98,11 +98,13 @@ void runSteppersBres(int targetX, int targetY) {
     }
         
   } // END while (isDrawing)
+  /*
   Serial.println("Finished line");
-  Serial.print("x0,y0: ");
+  Serial.print("Updatet stepper coordinates: x0,y0: ");
   Serial.print(x0);
   Serial.print(",");
   Serial.println(y0);
+  */
 
 }
 
@@ -140,13 +142,14 @@ bool bresenham() {
 }
 
 void drawCircle(float xcenter, float ycenter, float radius) {
+  // In absolute coordinates, (0,0) upper left like a web page.
   liftPen();
-  // Move to xy_start.
+  // Move to xy_start in absolute coordinates.
   moveHeadTo(xcenter+radius, ycenter); // NB! + radius of circle!
   // Move along circle of radius r.
   // 1) Divide circle into segments based on lengt of circumference and resolution limit.
   // Length og line segment = 5 mm for first try.
-  float segment_length = 30;  // Default 24 for circle with r = 30 mm
+  float segment_length = 5;  // Default 24 for circle with r = 30 mm
   float n_segments = (2*PI*radius)/segment_length;
   byte n = ceil(n_segments);
   Serial.print("n_segments Circle: ");
@@ -154,9 +157,9 @@ void drawCircle(float xcenter, float ycenter, float radius) {
   float d_theta = 2*PI/n;
   float theta = 0;
 
-  // Initialize coordinates
-  float x_start = radius;
-  float y_start = 0;
+  // Initialize relative coordinates. The whole circle is shifted by xcenter and ycenter.
+  float x_rel = radius;
+  float y_rel = 0;
   float x_new = 0;
   float y_new = 0;
 
@@ -171,22 +174,23 @@ void drawCircle(float xcenter, float ycenter, float radius) {
     String positions = "x0,y0: " + String(x0) + "," + String(y0);
     Serial.println(positions);*/
     theta = theta + d_theta;
-    x_new = radius * cos(theta);
-    y_new = radius * sin(theta);
-    /*String target = "Target x,y: " + String(x) + "," + String(y);
-    Serial.println(target);*/
+    x_new = radius * cos(theta) + xcenter;
+    y_new = radius * sin(theta) + ycenter;
+    //String target = "Target x_new,y_new: " + String(x_new) + "," + String(y_new);
+    String target = String(x_new) + "," + String(y_new);
+    //Serial.println(target);
     
     // Move using bresenham-stepper
     moveHeadTo(x_new, y_new);
     
 
     // Update integer coordinates
-    x0 = x_new;
-    y0 = y_new;
+    //x0 = x_new;
+    //y0 = y_new;
     
 
   }
-  String str4 = "Head position after Circle: x,y: " + String(x0) + "," + String(y0);
+  String str4 = "Head position after Circle: x0,y0: " + String(x0) + "," + String(y0);
   Serial.println(str4);
 }
 

@@ -20,8 +20,8 @@
 #define stepYpin 9
 
 unsigned int stepsPerRevolution = 4*2048; // 1/4 stepping => 8192 steps
-float timePerStepBuffer = 500.0;
-unsigned long timePerStep = 500;
+float timePerStepBuffer = 50.0;
+unsigned long timePerStep = 50;
 float pulleyRadius = 33.0;  // radius of pulleys on stepper motors. Determines linear speed.
 float pulleyCircumference = 2*PI*pulleyRadius;
 float stepLength = pulleyCircumference / stepsPerRevolution;
@@ -59,7 +59,7 @@ int sy = 0;
 unsigned long lastTime = micros(); // time in microseconds. overflows in around 70 min.
 int x_step = 0;
 int y_step = 0;
-float xCalibration = 64.6;  // Distance for 5000 steps in x-direction.
+float xCalibration = 62.0;  // Distance for 5000 steps in x-direction.
 float yCalibration = 62.0;  // Distance for 5000 steps in y-direction.
 
 
@@ -88,10 +88,12 @@ void setup() {
   //Serial.println("Moves in a circle radius = 20!");
   //drawCircle(0,0,20);
 
-  int radius = 30;
+  
+  int radius = 20;
   Serial.print("Moves in a circle radius = ");
-  Serial.print(radius);
-  drawCircle(0,0,radius);
+  Serial.println(radius);
+  drawCircle(50,50,radius);
+  
 
   /*
   for (int i =0; i<5; i++) {
@@ -103,6 +105,13 @@ void setup() {
 
   */
   
+  /*
+  for (int i =0; i<5; i++) {
+    moveHeadTo(20,10);
+    moveHeadTo(30,50);
+    moveHeadTo(5,15);
+  }
+  */
  
   /*
   // Absolute steps
