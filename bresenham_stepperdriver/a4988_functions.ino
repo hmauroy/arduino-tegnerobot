@@ -34,7 +34,7 @@ void lowerPen() {
 void moveHeadTo(int targetX, int targetY) {
   double x_steps = targetX / (xCalibration / 10000);
   double y_steps = targetY / (yCalibration / 10000);
-  x = round(x_staps);
+  x = round(x_steps);
   y = round(y_steps);
   runSteppersBres(x, y);
 }
