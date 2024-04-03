@@ -19,9 +19,12 @@
 #define stepXpin 8
 #define stepYpin 9
 
+#define xpDirLed 4  // positive movement along x
+#define xnDirLed 5  // negative movement
+
 unsigned int stepsPerRevolution = 4*2048; // 1/4 stepping => 8192 steps
-float timePerStepBuffer = 50.0;
-unsigned long timePerStep = 50;
+float timePerStepBuffer = 600;
+unsigned long timePerStep = 600;
 float pulleyRadius = 33.0;  // radius of pulleys on stepper motors. Determines linear speed.
 float pulleyCircumference = 2*PI*pulleyRadius;
 float stepLength = pulleyCircumference / stepsPerRevolution;
@@ -46,8 +49,8 @@ int x0 = 0;
 int y0 = 0;
 int x1 = 0;
 int y1 = 0;
-int x = 0;
-int y = 0;
+int x = 0; // Position in mm.
+int y = 0; // Position in mm.
 int dx = 0;
 int dy = 0;
 int err = 0;
@@ -59,7 +62,7 @@ int sy = 0;
 unsigned long lastTime = micros(); // time in microseconds. overflows in around 70 min.
 int x_step = 0;
 int y_step = 0;
-float xCalibration = 62.0;  // Distance for 5000 steps in x-direction.
+float xCalibration = 64.6;  // Distance for 5000 steps in x-direction.
 float yCalibration = 62.0;  // Distance for 5000 steps in y-direction.
 
 
@@ -72,13 +75,15 @@ void setup() {
   pinMode(dirYpin, OUTPUT);
   pinMode(stepXpin, OUTPUT);
   pinMode(stepYpin, OUTPUT);
+  pinMode(xpDirLed, OUTPUT);
+  pinMode(xnDirLed, OUTPUT);
   
   Serial.begin(9600);
   Serial.println("");
-  Serial.println("Startup waits 3000 ms...");
+  Serial.println("Startup waits 1000 ms...");
   Serial.println("*************************************");
 
-  delay(3000);
+  delay(1000);
   
 
   // Runs only once
@@ -89,10 +94,13 @@ void setup() {
   //drawCircle(0,0,20);
 
   
-  int radius = 20;
+  int radius = 30;
   Serial.print("Moves in a circle radius = ");
   Serial.println(radius);
-  drawCircle(50,50,radius);
+
+  for (int i=0; i<5; i++) {
+    drawCircle(50,50,radius);
+  }
   
 
   /*
@@ -107,11 +115,14 @@ void setup() {
   
   /*
   for (int i =0; i<5; i++) {
-    moveHeadTo(20,10);
-    moveHeadTo(30,50);
-    moveHeadTo(5,15);
+    Serial.println("New square");
+    moveHeadTo(40,1);
+    moveHeadTo(40,40);
+    moveHeadTo(1,40);
+    moveHeadTo(0,0);
   }
   */
+  
  
   /*
   // Absolute steps
@@ -121,12 +132,8 @@ void setup() {
   moveHeadTo(0,0);
   */
 
-  /*
-  moveHeadTo(-20,-20);
-  moveHeadTo(-80,-20);
-  moveHeadTo(-80,-80);
-  moveHeadTo(-20,-20);
-  */
+
+  
 
 }
 
