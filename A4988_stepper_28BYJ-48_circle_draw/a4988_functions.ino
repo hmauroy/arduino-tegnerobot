@@ -74,11 +74,11 @@ void moveHeadTo(float targetX, float targetY) {
 void drawCircle(float xcenter, float ycenter, float radius) {
   liftPen();
   // Move to xy_start.
-  moveHeadTo(xcenter+radius, ycenter); // NB! + radius of circle!
+  //moveHeadTo(xcenter+radius, ycenter); // NB! + radius of circle!
   // Move along circle of radius r.
   // 1) Divide circle into segments based on lengt of circumference and resolution limit.
   // Length og line segment = 5 mm for first try.
-  float segment_length = 2;  // Default 24 for circle with r = 30 mm
+  float segment_length = 5;  // Default 24 for circle with r = 30 mm
   float n_segments = (2*PI*radius)/segment_length;
   byte n = ceil(n_segments);
   Serial.print("n_segments Circle: ");
@@ -103,33 +103,42 @@ void drawCircle(float xcenter, float ycenter, float radius) {
     theta = theta + d_theta;
     x = radius * cos(theta);
     y = radius * sin(theta);
-    /*String target = "Target x,y: " + String(x) + "," + String(y);
-    Serial.println(target);*/
+    String target = String(x) + "," + String(y);
+    //Serial.println(target);
     dx = x-x0;
     dy = y-y0;
     // Calculate distances, number of steps and timePerStep and save to global array.
     calcTimePerStep(dx, dy);
+    //String message = "dx, dy " + String(dx) + "," + String(dy);
+    //Serial.println(message);
 
-    // Run steppers using speeds vx and vy which conrols the timing of the steppers.
-    /*Serial.print("timePerStepX,timePerStepY: ");
-    String temp2 = String(timePerStepX) + "," + String(timePerStepY);
-    Serial.println(temp2);*/
+    // Run steppers using speeds vx and vy which controls the timing of the steppers.
 
+    /*
     n_stepsX = stepperParams[0];
     n_stepsY = stepperParams[1];
     timePerStepX = stepperParams[2];
     timePerStepY = stepperParams[3];
+    */
+
+    String temp2 = "nx, ny, timePerStepX,timePerStepY: " + String(n_stepsX) + "," + String(n_stepsY) + "," + String(timePerStepX) + "," + String(timePerStepY);
+    //Serial.println(temp2);
 
     runSteppers(n_stepsX, n_stepsY, timePerStepX, timePerStepY);  // nsteps, time per step in microseconds
 
     // Update real integer coordinates
     int dx_real = n_stepsX * stepLength;
     int dy_real = n_stepsY * stepLength;
-    x0 = x0 + dx_real;
-    y0 = y0 + dy_real;
+
+    x0 = x0 + dx; // Purely theoretic positions.
+    y0 = y0 + dy;
+    
+    //x0 = x0 + dx_real; // This is correct, but may wreck the drawing.
+    //y0 = y0 + dy_real;
     
 
   }
+
   String str4 = "Head position after Circle: x,y: " + String(x0) + "," + String(y0);
   Serial.println(str4);
 }
@@ -143,39 +152,24 @@ void calcTimePerStep(float dx, float dy) {
   n_stepsY = 0;
   timePerStepX = 0;
   timePerStepY = 0;
-  // Which axis is furthest away.
-  if (abs(dx) > abs(dy)) {
-    tx = abs(dx)/vmax;
-    ty = tx;  // y-axis becomes slowest.
-  }
-  else if (abs(dx) < abs(dy)) {
-    ty = abs(dy)/vmax;
-    tx = ty;
-  }
-  else { // If equal they share the same time.
-    //Serial.println("Equal!");
-    if (abs(dx) <= 0.001) {
-      n_stepsX = 0;
-      tx = 0;
-    }
-    else if (abs(dy) <= 0.001) {
-      n_stepsY = 0;
-      ty = 0;
-    }
-    else {
-      tx = abs(dx)/vmax;
-      ty = tx;
-    }
-    
-  }
+
+  // Calculates distance and preserves the linear speed along line.
+  double s = sqrt(dx*dx + dy*dy);
+  double t = s/vmax;
+  double vx = dx/t;
+  double vy = dy/t; // mm/s
+
+  String speedInfo = "s, t, vx, vy: " + String(s) + "," + String(t) + ","+ String(vx) + ","+ String(vy);
+  //Serial.println(speedInfo);
+
 
   // Calculates n_steps in each axis
-  /*Serial.print("dx,dy,tx,ty: ");
-  String buffer = String(dx) + "," + String(dy) + "," + String(tx) + "," + String(ty);
-  Serial.println(buffer);*/
+  //String buffer = "dx, dy,vx,vy: " + String(dx) + "," + String(dy) + "," + String(vx) + "," + String(vy);
+  String buffer = "dx, dy: " + String(dx) + "," + String(dy);
+  Serial.println(buffer);
   // check if movement:
   if (abs(dx) > 0.00001) {
-    n_stepsX = round(dx / (stepLength * 1.061) );  // MULTIPLY stepLength WITH SCALING FACTOR 6.1 %
+    n_stepsX = round(dx / stepLength);  // MULTIPLY stepLength WITH SCALING FACTOR 6.1 %
   }
   if (abs(dy) > 0.00001) {
     n_stepsY = round(dy / stepLength);
@@ -189,10 +183,10 @@ void calcTimePerStep(float dx, float dy) {
   Serial.print("temp timePerStep (ms): ");
   Serial.println(temp);*/
   if (n_stepsX != 0) {
-    timePerStepX = floor(1000*(1000*tx / float(n_stepsX)));
+    timePerStepX = floor(1000*(1000*t / float(n_stepsX)));
   }
   if (n_stepsY != 0) {    
-    timePerStepY = floor(1000*(1000*ty / float(n_stepsY)));
+    timePerStepY = floor(1000*(1000*t / float(n_stepsY)));
   }
 
   // Sets global array
@@ -210,7 +204,7 @@ ny: number of steps in y-axis, negative value is counter clockwise.
 timePerStepX: time per step in microseconds for x-stepper.
 timePerStepY: time per step in microseconds for ystepper.
 */ 
-void runSteppers(int nx, int ny, float timePerStepX, float timePerStepY) {
+void runSteppers(int nx, int ny, double timePerStepX, double timePerStepY) {
   String dirX = "CW";
   String dirY = "CCW";
   int pauseX = int(round(timePerStepX/2));  // Divide by 2 because step signal is 2 x delayMicroseconds.

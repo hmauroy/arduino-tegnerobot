@@ -20,11 +20,11 @@
 #define stepYpin 9
 
 unsigned int stepsPerRevolution = 4*2048; // 1/4 stepping => 8192 steps
-float timePerStepBuffer = 500.0;
-unsigned int timePerStep = 500;
+float timePerStepBuffer = 5;
+unsigned int timePerStep = 5;
 float pulleyRadius = 33.0;  // radius of pulleys on stepper motors. Determines linear speed.
 float pulleyCircumference = 2*PI*pulleyRadius;
-float stepLength = pulleyCircumference / stepsPerRevolution;
+float stepLength = 62.0 / 5000; // Calibrated: mm/step
 float vmax = 20.0;  // mm/s maximum speed of any axis.
 
 // Variables for positioning
@@ -39,13 +39,13 @@ int stepperParams[] = {1024,1024,3000,3000};  // nx, ny, timePerStepX, timePerSt
 
 float dx = 0;
 float dy = 0;
-float tx = 0;
-float ty = 0;
+double tx = 0;
+double ty = 0;
 int n_stepsX = 0;
 int n_stepsY = 0;
 
-float timePerStepX = 6000;
-float timePerStepY = 6000;
+double timePerStepX = 6000;
+double timePerStepY = 6000;
 
 
 void setup() {
@@ -57,10 +57,10 @@ void setup() {
   
   Serial.begin(9600);
   Serial.println("");
-  Serial.println("Startup waits 3000 ms...");
+  Serial.println("Startup waits 1000 ms...");
   Serial.println("*************************************");
 
-  delay(3000);
+  delay(1000);
   
  /*
   // Runs only once
@@ -79,11 +79,18 @@ void setup() {
   Serial.print(radius);
   drawCircle(0,0,radius);
 */
-  
-  moveHeadTo(0,80);
-  moveHeadTo(80,80);
-  moveHeadTo(80,0);
-  moveHeadTo(0,0);
+  int radius = 30;
+  Serial.print("Moves in a circle radius = ");
+  Serial.println(radius);
+
+  for (int i=0; i<5; i++) {
+    drawCircle(50,50,radius);
+  }
+
+  // moveHeadTo(0,80);
+  // moveHeadTo(80,80);
+  // moveHeadTo(80,0);
+  // moveHeadTo(0,0);
 
   /*
   moveHeadTo(-20,-20);

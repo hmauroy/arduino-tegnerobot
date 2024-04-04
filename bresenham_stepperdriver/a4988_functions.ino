@@ -31,16 +31,27 @@ void lowerPen() {
   lifted = false;
 }
 
-void moveHeadTo(int targetX, int targetY) {
-  double x_steps = targetX / (xCalibration / 10000);
-  double y_steps = targetY / (yCalibration / 10000);
+void moveHeadTo(float targetX, float targetY) {
+  // Wrapper function that will be the one always responsible for movement to absolute position in mm coordinates.
+  double x_steps = targetX / (xCalibration / 5000);
+  double y_steps = targetY / (yCalibration / 5000);
   x = round(x_steps);
   y = round(y_steps);
   runSteppersBres(x, y);
 }
 
+void moveHeadTo_2(float targetX, float targetY) {
+  // Wrapper function that will be the one always responsible for movement to absolute position in mm coordinates.
+  double x_distance = targetX - x;
+  x = targetX;
+  double y_distance = targetY - y;
+  y = targetY;
+
+  runSteppersBres(targetX, targetY);
+}
+
 void runSteppersBres(int targetX, int targetY) {
-  // TargetX og targetY er i pixelverdier!!!!!!!
+  // TargetX and targetY are in mm coordinates
   // Coordinate system is 0,0 upper left!
   x1 = targetX;
   y1 = targetY;
@@ -66,7 +77,7 @@ void runSteppersBres(int targetX, int targetY) {
   isDrawing = bresenham(); // Updates global variables dx, dy to either +1, -1 or 0 for a step or not.
   // Start loop with intervals
   while (isDrawing) {
-    if (micros() - lastTime >= timePerStep) {
+    if (micros() - lastTime >= updateTime) {
       //Serial.print("pulseOn, dx, dy: ");
       //String str1 = String(pulseOn) + "," + String(dx) + "," + String(dy);
       //Serial.println(str1);
@@ -98,25 +109,35 @@ void runSteppersBres(int targetX, int targetY) {
           digitalWrite(xpDirLed, LOW);
           digitalWrite(xnDirLed, LOW);
         }
-        digitalWrite(stepXpin, abs(x_step)); // writes either a 1 (HIGH) or 0 (LOW) dependent on result from bresenham. dx can be +1, -1, 0.
-        digitalWrite(stepYpin, abs(y_step));
+        //digitalWrite(stepXpin, abs(x_step)); // writes either a 1 (HIGH) or 0 (LOW) dependent on result from bresenham. dx can be +1, -1, 0.
+        //digitalWrite(stepYpin, abs(y_step));
         pulseOn = !pulseOn; // flips logic
-        delayMicroseconds(5);
-        // Turns off the pulse after 50 microseconds
-        digitalWrite(stepXpin, LOW);
-        digitalWrite(stepYpin, LOW);
-        // Calculate next step while we wait for pulse to become low
+        
+        // Pulse steppers multiple times for one pixel movement. Needs microstepping.
+        pulseSteppers(abs(x_step), abs(y_step), 4);
+        // Calculate next step while we wait for next update.
         isDrawing = bresenham();
       }
     }
         
   } // END while (isDrawing)
+
+  //x = x + (dx / stepLength);
+  
+  
+  //Serial.println("Finished line");
+  
   /*
-  Serial.println("Finished line");
   Serial.print("Updatet stepper coordinates: x0,y0: ");
   Serial.print(x0);
   Serial.print(",");
   Serial.println(y0);
+  
+  Serial.print("Updatet absolute coordinates: x,y: ");
+  Serial.print(x);
+  Serial.print(",");
+  Serial.println(y);
+
   */
 
 }
@@ -220,5 +241,73 @@ void drawCircle(float xcenter, float ycenter, float radius) {
   String str4 = "Head position after Circle: x0,y0: " + String(x0) + "," + String(y0);
   Serial.println(str4);
 }
+
+void pulseSteppers(bool x, bool y, int n) {
+  for (int i=0; i<n; i++) {
+    digitalWrite(stepXpin, x);
+    digitalWrite(stepYpin, y);
+    delayMicroseconds(50);
+    digitalWrite(stepXpin, LOW);
+    digitalWrite(stepYpin, LOW);
+    // Sleep for pulse off time
+    delayMicroseconds(timePerStep);
+  }
+  
+}
+
+void drawCircle_bres(int centerX, int centerY, int radius) {
+            int x = centerX;
+            int y = centerY + radius;
+            int d = 3 - (2 * radius);
+
+            int x_old = x;
+            int y_old = y;
+
+            bool x_puls = false;
+            bool y_puls = false;
+
+            // Set directions along positive directions, (0,0) is upper left.
+            digitalWrite(dirXpin, HIGH); // CW
+            digitalWrite(dirYpin, LOW); // CCW
+
+
+            while (x <= y) {
+                x_puls = false;
+                y_puls = false;
+                // Move stepper motors
+                String str1 = "x,y: " + String(x) + "," + String(y);
+                Serial.println(str1);
+                if (x != x_old) {
+                  x_old = x;
+                  x_puls = true;
+                }
+                if (y != y_old) {
+                  y_old = y;
+                  y_puls = true;
+                }
+                pulseSteppers(x_puls, y_puls, 8);
+
+                /*
+                // Draw 8 octants
+                ctx.fillRect(centerX + x, centerY + y, 1, 1); // Octant 1
+                ctx.fillRect(centerX - x, centerY + y, 1, 1); // Octant 2
+                ctx.fillRect(centerX + x, centerY - y, 1, 1); // Octant 8
+                ctx.fillRect(centerX - x, centerY - y, 1, 1); // Octant 7
+                ctx.fillRect(centerX + y, centerY + x, 1, 1); // Octant 3
+                ctx.fillRect(centerX - y, centerY + x, 1, 1); // Octant 4
+                ctx.fillRect(centerX + y, centerY - x, 1, 1); // Octant 6
+                ctx.fillRect(centerX - y, centerY - x, 1, 1); // Octant 5
+                */
+
+                // Update coordinates based on Bresenham's algorithm
+                x += 1;
+                if (d > 0) {
+                    y -= 1;
+                    d = d + 4 * (x - y) + 10;
+                } else {
+                    d = d + 4 * x + 6;
+                }                
+            }
+        }
 
 
