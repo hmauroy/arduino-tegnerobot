@@ -16,11 +16,11 @@
 #include <AccelStepper.h>
 
 // The X Stepper pins
-#define STEPPER1_DIR_PIN 3
-#define STEPPER1_STEP_PIN 2
+#define STEPPER1_DIR_PIN 6
+#define STEPPER1_STEP_PIN 8
 // The Y stepper pins
 #define STEPPER2_DIR_PIN 7
-#define STEPPER2_STEP_PIN 6
+#define STEPPER2_STEP_PIN 9
 
 // Define some steppers and the pins the will use
 AccelStepper stepper1(AccelStepper::DRIVER, STEPPER1_STEP_PIN, STEPPER1_DIR_PIN);
@@ -28,13 +28,13 @@ AccelStepper stepper2(AccelStepper::DRIVER, STEPPER2_STEP_PIN, STEPPER2_DIR_PIN)
 
 void setup()
 {  
-    stepper1.setMaxSpeed(200.0);
+    stepper1.setMaxSpeed(1600.0);
     stepper1.setAcceleration(200.0);
-    stepper1.moveTo(100);
+    stepper1.moveTo(8192);
     
     stepper2.setMaxSpeed(100.0);
     stepper2.setAcceleration(100.0);
-    stepper2.moveTo(100);
+    stepper2.moveTo(2000);
 }
 
 void loop()
