@@ -1,44 +1,49 @@
-// MultiStepper.pde
+// DualMotorShield.pde
 // -*- mode: C++ -*-
-// Use MultiStepper class to manage multiple steppers and make them all move to 
-// the same position at the same time for linear 2d (or 3d) motion.
+//
+// Shows how to run 2 simultaneous steppers
+// using the Itead Studio Arduino Dual Stepper Motor Driver Shield
+// model IM120417015
+// This shield is capable of driving 2 steppers at 
+// currents of up to 750mA
+// and voltages up to 30V
+// Runs both steppers forwards and backwards, accelerating and decelerating
+// at the limits.
+//
+// Copyright (C) 2014 Mike McCauley
+// $Id:  $
 
 #include <AccelStepper.h>
-#include <MultiStepper.h>
 
-// EG X-Y position bed driven by 2 steppers
-// Alas its not possible to build an array of these with different pins for each :-(
-AccelStepper stepper1(AccelStepper::FULL4WIRE, 2, 3, 4, 5);
-AccelStepper stepper2(AccelStepper::FULL4WIRE, 8, 9, 10, 11);
+// The X Stepper pins
+#define STEPPER1_DIR_PIN 3
+#define STEPPER1_STEP_PIN 2
+// The Y stepper pins
+#define STEPPER2_DIR_PIN 7
+#define STEPPER2_STEP_PIN 6
 
-// Up to 10 steppers can be handled as a group by MultiStepper
-MultiStepper steppers;
+// Define some steppers and the pins the will use
+AccelStepper stepper1(AccelStepper::DRIVER, STEPPER1_STEP_PIN, STEPPER1_DIR_PIN);
+AccelStepper stepper2(AccelStepper::DRIVER, STEPPER2_STEP_PIN, STEPPER2_DIR_PIN);
 
-void setup() {
-  Serial.begin(9600);
-
-  // Configure each stepper
-  stepper1.setMaxSpeed(100);
-  stepper2.setMaxSpeed(100);
-
-  // Then give them to MultiStepper to manage
-  steppers.addStepper(stepper1);
-  steppers.addStepper(stepper2);
+void setup()
+{  
+    stepper1.setMaxSpeed(200.0);
+    stepper1.setAcceleration(200.0);
+    stepper1.moveTo(100);
+    
+    stepper2.setMaxSpeed(100.0);
+    stepper2.setAcceleration(100.0);
+    stepper2.moveTo(100);
 }
 
-void loop() {
-  long positions[2]; // Array of desired stepper positions
-  
-  positions[0] = 1000;
-  positions[1] = 50;
-  steppers.moveTo(positions);
-  steppers.runSpeedToPosition(); // Blocks until all are in position
-  delay(1000);
-  
-  // Move to a different coordinate
-  positions[0] = -100;
-  positions[1] = 100;
-  steppers.moveTo(positions);
-  steppers.runSpeedToPosition(); // Blocks until all are in position
-  delay(1000);
+void loop()
+{
+    // Change direction at the limits
+    if (stepper1.distanceToGo() == 0)
+	stepper1.moveTo(-stepper1.currentPosition());
+    if (stepper2.distanceToGo() == 0)
+	stepper2.moveTo(-stepper2.currentPosition());
+    stepper1.run();
+    stepper2.run();
 }
