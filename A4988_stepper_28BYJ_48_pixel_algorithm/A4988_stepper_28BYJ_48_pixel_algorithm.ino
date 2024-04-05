@@ -84,7 +84,7 @@ void setup() {
   Serial.println(r);
 
   for (int i=0; i<5; i++) {
-    drawCircle(50,50,r);
+    //drawCircle(50,50,r);
   }
 
   // moveHeadTo(0,80);
@@ -99,9 +99,50 @@ void setup() {
   moveHeadTo(-20,-20);
   */
 
+  Serial.println("Waits for comma sep input: n_stepsX,n_stepsY,pulse_length");
+
 }
 
 void loop() {
+
+  // if there's any serial available, read it:
+  while (Serial.available() > 0) {
+
+    // look for the next valid comma separated integer in the incoming serial stream:
+    n_stepsX = Serial.parseInt();
+    n_stepsY = Serial.parseInt();
+    int pulse_length = Serial.parseInt();
+    //float speed = Serial.parseFloat();
+
+    // look for the newline. That's the end of your sentence:
+    if (Serial.read() == '\n') {
+      Serial.println("Got message!");
+      moveHeadTo(n_stepsX,n_stepsY,pulse_length);
+      
+    }
+  }
   
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

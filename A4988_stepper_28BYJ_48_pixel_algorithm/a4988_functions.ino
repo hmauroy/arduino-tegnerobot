@@ -31,37 +31,56 @@ void lowerPen() {
   lifted = false;
 }
 
-void moveHeadTo(float targetX, float targetY) {
+void moveHeadTo(float targetX, float targetY, double pulse_length) {
 
   /*
+   Input is absolute pixel coordinates (stepper-motor pulses) 
    Moves to coordinate (x,y), then sets x0 and y0 to these values.
-   1) Calculate longest distance.
-   2) Calculate speed in each axis to reach destination at the same time.
-   3) Move x and y in parallel using different speeds.
+   1) alculate speed in each axis to reach destination at the same time.
+   2) Move x and y in parallel using different speeds.
   */
-  float dx = targetX - x0;
-  float dy = targetY - y0;
+  dx = targetX - x0;
+  dy = targetY - y0;
   
-  // Calculate distances, number of steps and timePerStep and save to global array.
-  calcTimePerStep(dx, dy);
+  // Calculate distances (number of steps) and timePerStep and save to global variables..
+  //calcTimePerStep(dx, dy);
 
-  String str1 = "Moves head to (x,y): (" + String(targetX) + "," + String(targetY) + ")";
-  Serial.println(str1);
-  String str2 = "dx, dy: " + String(dx) + "," + String(dy);
-  Serial.println(str2);
+  // Manual calculation
+  n_stepsX = round(dx);
+  n_stepsY = round(dy);
+  double s = sqrt(dx*dx + dy*dy);
+  double t = s/vmax;
 
-  String str3 = "nx, ny, timePerStepX, timePerStepY: " + String(n_stepsX) + "," + String(n_stepsY) + "," + String(timePerStepX) + "," + String(timePerStepY);
-  Serial.println(str3);
+  if (n_stepsX != 0) {
+    timePerStepX = floor(1000*(1000*t / float(n_stepsX)));
+  }
+  if (n_stepsY != 0) {    
+    timePerStepY = floor(1000*(1000*t / float(n_stepsY)));
+  }
 
-  runSteppers(n_stepsX, n_stepsY, timePerStepX, timePerStepY);  // nsteps, time per step in microseconds
+  //String message = "dx, dy " + String(dx) + "," + String(dy);
+  //Serial.println(message);
+
+  // Run steppers using speeds vx and vy which controls the timing of the steppers.
+
+  //String temp2 = "nx, ny, timePerStepX,timePerStepY: " + String(n_stepsX) + "," + String(n_stepsY) + "," + String(timePerStepX) + "," + String(timePerStepY);
+  String temp2 = "nx, ny, timePerStepX,timePerStepY: " + String(n_stepsX) + "," + String(n_stepsY) + "," + String(pulse_length) + "," + String(pulse_length);
+  Serial.println(temp2);
+
+  //runSteppers(n_stepsX, n_stepsY, timePerStepX, timePerStepY);  // nsteps, time per step in microseconds
+  runSteppers(n_stepsX, n_stepsY, pulse_length, pulse_length);  // nsteps, time per step in microseconds
 
   // Update real integer coordinates
-  int dx_real = n_stepsX * stepLength;
-  int dy_real = n_stepsY * stepLength;
-  x0 = x0 + dx_real;
-  y0 = y0 + dy_real;
 
-  String str4 = "Head position: x,y: " + String(x0) + "," + String(y0);
+  x0 = x0 + dx; // Purely theoretic positions.
+  y0 = y0 + dy;
+  
+  //x0 = x0 + n_stepsX; // This is correct, but may wreck the drawing.
+  //y0 = y0 + n_stepsY;
+
+
+
+  String str4 = "Head position: x0,y0: " + String(x0) + "," + String(y0);
   Serial.println(str4);
   
 }
