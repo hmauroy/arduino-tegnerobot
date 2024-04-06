@@ -26,24 +26,47 @@
 AccelStepper stepper1(AccelStepper::DRIVER, STEPPER1_STEP_PIN, STEPPER1_DIR_PIN);
 AccelStepper stepper2(AccelStepper::DRIVER, STEPPER2_STEP_PIN, STEPPER2_DIR_PIN);
 
+int xpos = 6000;
+int ypos = 2000;
+bool xfinish = false;
+bool yfinish = false;
+
 void setup()
 {  
-    stepper1.setMaxSpeed(1600.0);
+    Serial.begin(9600);
+    stepper1.setMaxSpeed(1530.0);
     stepper1.setAcceleration(200.0);
-    stepper1.moveTo(8192);
     
-    stepper2.setMaxSpeed(100.0);
-    stepper2.setAcceleration(100.0);
-    stepper2.moveTo(2000);
+    stepper2.setMaxSpeed(510.0);
+    stepper2.setAcceleration(66.67);
+
+    
+
+    Serial.println("Starts in 1000 ms");
+    delay(1000);
+
+    stepper1.moveTo(xpos);
+    stepper2.moveTo(ypos);
 }
 
 void loop()
 {
-    // Change direction at the limits
-    if (stepper1.distanceToGo() == 0)
-	stepper1.moveTo(-stepper1.currentPosition());
-    if (stepper2.distanceToGo() == 0)
-	stepper2.moveTo(-stepper2.currentPosition());
-    stepper1.run();
-    stepper2.run();
+  //   // Change direction at the limits
+  //   if (stepper1.distanceToGo() == 0)
+	// stepper1.moveTo(-stepper1.currentPosition());
+  //   if (stepper2.distanceToGo() == 0)
+	// stepper2.moveTo(-stepper2.currentPosition());
+  if (stepper1.distanceToGo() == 0 && xfinish == false) {
+    xfinish = true;
+    Serial.println("Motor X finished");
+  }
+  if (stepper2.distanceToGo() == 0 && yfinish == false) {
+    yfinish = true;
+    Serial.println("Motor Y finished");
+  }
+  stepper1.run();
+  stepper2.run();
+
+
+  
 }

@@ -25,7 +25,7 @@ unsigned int timePerStep = 500;
 float pulleyRadius = 33.0;  // radius of pulleys on stepper motors. Determines linear speed.
 float pulleyCircumference = 2*PI*pulleyRadius;
 float stepLength = 62.0 / 5000; // Calibrated: mm/step. ca. 62mm/5000 steps ved 1/4-stepping
-float vmax = 20.0 / stepLength;  // mm/s maximum speed of any axis.
+float vmax = 2.0 / stepLength;  // mm/s maximum speed of any axis.
 
 // Variables for positioning
 float x0 = 0;
@@ -83,8 +83,8 @@ void setup() {
   Serial.print("Moves in a circle radius = ");
   Serial.println(r);
 
-  for (int i=0; i<5; i++) {
-    //drawCircle(50,50,r);
+  for (int i=0; i<7; i++) {
+    drawCircle(50,50,r);
   }
 
   // moveHeadTo(0,80);
@@ -105,22 +105,22 @@ void setup() {
 
 void loop() {
 
-  // if there's any serial available, read it:
-  while (Serial.available() > 0) {
+  // // if there's any serial available, read it:
+  // while (Serial.available() > 0) {
 
-    // look for the next valid comma separated integer in the incoming serial stream:
-    n_stepsX = Serial.parseInt();
-    n_stepsY = Serial.parseInt();
-    int pulse_length = Serial.parseInt();
-    //float speed = Serial.parseFloat();
+  //   // look for the next valid comma separated integer in the incoming serial stream:
+  //   n_stepsX = Serial.parseInt();
+  //   n_stepsY = Serial.parseInt();
+  //   int pulse_length = Serial.parseInt();
+  //   //float speed = Serial.parseFloat();
 
-    // look for the newline. That's the end of your sentence:
-    if (Serial.read() == '\n') {
-      Serial.println("Got message!");
-      moveHeadTo(n_stepsX,n_stepsY,pulse_length);
+  //   // look for the newline. That's the end of your sentence:
+  //   if (Serial.read() == '\n') {
+  //     Serial.println("Got message!");
+  //     moveHeadTo(n_stepsX,n_stepsY,pulse_length);
       
-    }
-  }
+  //   }
+  // }
   
 
 }
