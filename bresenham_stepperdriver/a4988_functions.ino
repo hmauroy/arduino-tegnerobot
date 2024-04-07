@@ -33,11 +33,7 @@ void lowerPen() {
 
 void moveHeadTo(float targetX, float targetY) {
   // Wrapper function that will be the one always responsible for movement to absolute position in mm coordinates.
-  double x_steps = targetX / (xCalibration / 5000);
-  double y_steps = targetY / (yCalibration / 5000);
-  x = round(x_steps);
-  y = round(y_steps);
-  runSteppersBres(x, y);
+  runSteppersBres(round(targetX), round(targetY));
 }
 
 void moveHeadTo_2(float targetX, float targetY) {
@@ -50,11 +46,11 @@ void moveHeadTo_2(float targetX, float targetY) {
   runSteppersBres(targetX, targetY);
 }
 
-void runSteppersBres(int targetX, int targetY) {
-  // TargetX and targetY are in mm coordinates
+void runSteppersBres(float targetX, float targetY) {
+  // TargetX and targetY are in pixel-coordinates
   // Coordinate system is 0,0 upper left!
-  x1 = targetX;
-  y1 = targetY;
+  x1 = int(targetX);
+  y1 = int(targetY);
   dx = abs(x1 - x0);
   dy = -abs(y1 - y0);
   err = dx + dy;
@@ -185,31 +181,34 @@ void setAbsoluteCoordinates(float x_mm, float y_mm) {
   Serial.println(str4);
 }
 
-void drawCircle(float xcenter, float ycenter, float radius) {
+void drawCircle(float xcenter, float ycenter, float r) {
   // In absolute coordinates, (0,0) upper left like a web page.
   liftPen();
   // Move to xy_start in absolute coordinates.
   //moveHeadTo(xcenter+radius, ycenter); // NB! + radius of circle!
   
   // For testing purposes, set absolute pixel positions manually to start drawing directly from start position.
-  setAbsoluteCoordinates(xcenter+radius,ycenter);
+  //setAbsoluteCoordinates(xcenter+r,ycenter);
   
   // Move along circle of radius r.
   // 1) Divide circle into segments based on lengt of circumference and resolution limit.
   // Length og line segment = 5 mm for first try.
-  float segment_length = 5;  // Default 24 for circle with r = 30 mm
-  float n_segments = (2*PI*radius)/segment_length;
+  float segment_length = 15;  // Default 24 for circle with r = 30 mm
+  float n_segments = (2*PI*r)/segment_length;
   byte n = ceil(n_segments);
   Serial.print("n_segments Circle: ");
   Serial.println(n);
   float d_theta = 2*PI/n;
   float theta = 0;
 
-  // Initialize relative coordinates. The whole circle is shifted by xcenter and ycenter.
-  float x_rel = radius;
-  float y_rel = 0;
-  float x_new = 0;
-  float y_new = 0;
+  // Initialize x0 and y0, radius as pixel values
+  unsigned int x0_px = round(xcenter / (xCalibration / 5000)); // Pixel-position of center of circle.
+  unsigned int y0_px = round(ycenter / (yCalibration / 5000));
+  radius = round(r / (xCalibration / 5000));
+  x0 = x0_px + radius;
+  y0 = y0_px;
+  String target = "x0,y0: " + String(x0) + "," + String(y0);
+  Serial.println(target);
 
 
   // 2) Run for loop of n line segments.
@@ -222,14 +221,14 @@ void drawCircle(float xcenter, float ycenter, float radius) {
     String positions = "x0,y0: " + String(x0) + "," + String(y0);
     Serial.println(positions);*/
     theta = theta + d_theta;
-    x_new = radius * cos(theta) + xcenter;
-    y_new = radius * sin(theta) + ycenter;
+    x = radius * cos(theta) + x0_px;
+    y = radius * sin(theta) + y0_px;
     //String target = "Target x_new,y_new: " + String(x_new) + "," + String(y_new);
-    String target = String(x_new) + "," + String(y_new);
+    String target = String(x) + "," + String(y);
     //Serial.println(target);
     
     // Move using bresenham-stepper
-    moveHeadTo(x_new, y_new);
+    moveHeadTo(x, y);
     
 
     // Update integer coordinates
@@ -253,6 +252,84 @@ void pulseSteppers(bool x, bool y, int n) {
     delayMicroseconds(timePerStep);
   }
   
+}
+
+void drawCircleVectorSpeed(float xcenter, float ycenter, float r) {
+  // In absolute coordinates, (0,0) upper left like a web page.
+  liftPen();
+  // Move to xy_start in absolute coordinates.
+  //moveHeadTo(xcenter+radius, ycenter); // NB! + radius of circle!
+  
+  // For testing purposes, set absolute pixel positions manually to start drawing directly from start position.
+  //setAbsoluteCoordinates(xcenter+r,ycenter);
+  
+  // Move along circle of radius r.
+  // 1) Divide circle into segments based on lengt of circumference and resolution limit.
+  // Length og line segment = 5 mm for first try.
+  float segment_length = 15;  // Default 24 for circle with r = 30 mm
+  float n_segments = (2*PI*r)/segment_length;
+  byte n = ceil(n_segments);
+  Serial.print("n_segments Circle: ");
+  Serial.println(n);
+  double v = 1.0;
+  double dt = 1000 * 1000 * 2*PI*r / v; // microseconds
+  double t = 0;
+
+  // Initialize x0 and y0, radius as pixel values
+  unsigned int x0_px = round(xcenter / (xCalibration / 5000)); // Pixel-position of center of circle.
+  unsigned int y0_px = round(ycenter / (yCalibration / 5000));
+  radius = round(r / (xCalibration / 5000));
+  x0 = x0_px + radius;
+  y0 = y0_px;
+  String target = "x0,y0: " + String(x0) + "," + String(y0);
+  Serial.println(target);
+
+  // Run a timer loop which updates the speed every dt seconds.
+  // Calculate speed in x- and y-direction from speedvectors while running a loop
+  /*
+    Example circle 1:
+    r = 30 mm
+    v = 20 mm/s
+    n = 38 segments (updates)
+    vx(t) = -v*sin(v/r * t) = -20*sin(2*t / 3)
+    vy(t) = v*cos(v/r * t) = 20*cos(2*t / 3)
+  */
+  bool isRunning = true;
+  bool sigX = true; // pulse ON or OFF
+  bool sigY = true;
+  dt = 500000;
+  while (isDrawing) {
+    if (micros() - lastUpdate >= dt) {
+      lastUpdate = micros();
+      t = t + dt;
+      //Serial.println("Updates speeds");
+      vx = -v*sin(v*t / r); // mm/s
+      vy = v*cos(v*t / r);
+      // Update timings for each speed
+      double vx_px = vx / stepLengthX; // mm/s / mm/step = steps/s
+      timePerStepX = 1 / vx_px;  // 1 / steps/s = s/step
+      double vy_px = vy / stepLengthY; // mm/s / mm/step = steps/s
+      timePerStepY = 1 / vy_px;  // 1 / steps/s = s/step
+      String speedInfo = "vx, vy, vx_px, vy_px: " + String(vx) + "," + String(vy) + "," + String(vx_px) + "," + String(vy_px);
+      Serial.println(speedInfo);
+
+    }
+    if (micros() - txLast >= timePerStepX) {
+      txLast = micros();
+      sigX = !sigX; // Invert signal
+      digitalWrite(stepXpin, sigX); // turn ON or OFF stepPin.
+    }
+    if (micros() - tyLast >= timePerStepX) {
+      tyLast = micros();
+      sigY = !sigY;
+      digitalWrite(stepXpin, sigY);
+
+    }
+
+  }
+
+  //String str4 = "Head position after Circle: x0,y0: " + String(x0) + "," + String(y0);
+  //Serial.println(str4);
 }
 
 void drawCircle_bres(int centerX, int centerY, int radius) {
