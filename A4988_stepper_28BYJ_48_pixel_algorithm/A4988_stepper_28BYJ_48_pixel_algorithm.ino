@@ -25,7 +25,7 @@ unsigned int timePerStep = 500;
 float pulleyRadius = 33.0;  // radius of pulleys on stepper motors. Determines linear speed.
 float pulleyCircumference = 2*PI*pulleyRadius;
 float stepLength = 62.0 / 5000; // Calibrated: mm/step. ca. 62mm/5000 steps ved 1/4-stepping
-float vmax = 5.0 / stepLength;  // mm/s maximum speed of any axis.
+float vmax = 20.0 / stepLength;  // mm/s maximum speed of any axis.
 
 // Variables for positioning
 float x0 = 0;

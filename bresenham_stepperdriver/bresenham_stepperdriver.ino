@@ -23,9 +23,8 @@
 #define xnDirLed 5  // negative movement
 
 unsigned int stepsPerRevolution = 4*2048; // 1/4 stepping => 8192 steps
-float timePerStepBuffer = 100;
-unsigned long timePerStep = 100;
-unsigned long updateTime = 100; // Time between recalculation of Bresenham.
+unsigned long timePerStep = 600;
+unsigned long updateTime = 600; // Time between recalculation of Bresenham.
 float pulleyRadius = 33.0;  // radius of pulleys on stepper motors. Determines linear speed.
 float pulleyCircumference = 2*PI*pulleyRadius;
 float stepLength = pulleyCircumference / stepsPerRevolution;
@@ -41,8 +40,8 @@ int stepperParams[] = {1024,1024,3000,3000};  // nx, ny, timePerStepX, timePerSt
 float tx = 0;
 float ty = 0;
 
-float timePerStepX = 6000;
-float timePerStepY = 6000;
+double timePerStepX = 6000;
+double timePerStepY = 6000;
 
 // Bresenhams algorithm variables
 // Variables for positioning
@@ -66,8 +65,8 @@ int x_step = 0;
 int y_step = 0;
 float xCalibration = 64.6;  // Distance for 5000 steps in x-direction.
 float yCalibration = 62.0;  // Distance for 5000 steps in y-direction.
-float stepLengthX = xCalibration / 5000;
-float stepLengthY = yCalibration / 5000;
+float stepLengthX = xCalibration / 5000; // 0.0129 mm/step
+float stepLengthY = yCalibration / 5000; // 0.0124 mm/step
 double vx = 0;
 double vy = 0;
 unsigned long txLast = micros();
@@ -108,7 +107,7 @@ void setup() {
   Serial.print("Moves in a circle radius = ");
   Serial.println(radius);
 
-  for (int i=0; i<1; i++) {
+  for (int i=0; i<5; i++) {
     //drawCircle(50,50,radius); 
     drawCircleVectorSpeed(50,50,radius);
   }
