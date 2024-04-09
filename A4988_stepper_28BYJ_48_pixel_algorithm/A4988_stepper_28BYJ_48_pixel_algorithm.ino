@@ -10,6 +10,7 @@
  * Total 32*64 = 2048 steps per revolution
  * Half-stepping: 4096 steps/revolution
  * 1/4 stepping: 8192 steps/revolution
+ * 1/4 stepping: 360deg/8192steps/rot =  0.043945 deg / step
  * 
  */
 
@@ -46,6 +47,10 @@ int n_stepsY = 0;
 
 double timePerStepX = 6000;
 double timePerStepY = 6000;
+
+int xdirLast = 1; // Stores last direction from last movement.
+int ydirLast = 1;
+bool shapeNotStarted = true;
 
 
 void setup() {
