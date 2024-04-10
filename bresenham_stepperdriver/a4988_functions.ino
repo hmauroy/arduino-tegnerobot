@@ -206,7 +206,7 @@ void drawCircle(float xcenter, float ycenter, float r) {
   // Move along circle of radius r.
   // 1) Divide circle into segments based on lengt of circumference and resolution limit.
   // Length og line segment = 5 mm for first try.
-  float segment_length = 5;  // Default 24 for circle with r = 30 mm
+  float segment_length = 4;  // Default 24 for circle with r = 30 mm
   float n_segments = (2*PI*r)/segment_length;
   byte n = ceil(n_segments);
   Serial.print("n_segments Circle: ");
@@ -273,7 +273,7 @@ void drawCircleVectorSpeed(float xcenter, float ycenter, float r) {
   byte n = ceil(n_segments);
   Serial.print("n_segments Circle: ");
   Serial.println(n);
-  double v = 20.0;
+  double v = 10.0;
   double dt = 1000 * 1000 * 2*PI*r / v; // microseconds
   double t = 0;
 
@@ -285,8 +285,8 @@ void drawCircleVectorSpeed(float xcenter, float ycenter, float r) {
   y0 = y0_px;
   String target = "x0,y0: " + String(x0) + "," + String(y0);
   //Serial.println(target);
-  Serial.print("dt:");
-  Serial.println(abs(dt));
+  //Serial.print("dt:");
+  //Serial.println(abs(dt));
 
   // Run a timer loop which updates the speed every dt seconds.
   // Calculate speed in x- and y-direction from speedvectors while running a loop
@@ -301,14 +301,125 @@ void drawCircleVectorSpeed(float xcenter, float ycenter, float r) {
   bool isRunning = true;
   bool sigX = true; // pulse ON or OFF
   bool sigY = true;
-  //dt = 0.01;
+  dt = 0.01 * 1000000;
   while (isDrawing) {
     if (micros() - lastUpdate >= abs(dt)) {
       lastUpdate = micros();
       t = t + (dt/1000000);
       //Serial.println("Updates speeds");
-      vx = -v*sin(v*t / r); // mm/s
-      vy = v*cos(v*t / r);
+      vx = -2.2*v*sin(v*t / r); // mm/s. Factor 2.2 is tweaking the radius to be around 30 mm as wanted.
+      vy = 2.2*v*cos(v*t / r);
+      // Update timings for each speed
+      double vx_px = vx / stepLengthX; // mm/s / mm/step = steps/s
+      timePerStepX = 1000000 / vx_px;  // 1000000us / steps/s = s/step
+      double vy_px = vy / stepLengthY; // mm/s / mm/step = steps/s
+      timePerStepY = 1000000 / vy_px;  // 1000000us / steps/s = us/step
+      //String speedInfo = "vx, vy, timeX, timeY: " + String(vx) + "," + String(vy) + "," + String(timePerStepX) + "," + String(timePerStepY);
+      //String speedInfo = "vy, timeY: " + String(vy) + "," + String(timePerStepY);
+      //Serial.println(speedInfo);
+      // Update directions
+      if (vx < 0) {
+          digitalWrite(dirXpin, HIGH); // CW
+        }
+        else {
+          digitalWrite(dirXpin, LOW); // CCW
+          
+        }
+        if (vy < 0) {
+          digitalWrite(dirYpin, LOW); // CCW
+          digitalWrite(xpDirLed, LOW);
+          digitalWrite(xnDirLed, HIGH);
+        }
+        else {
+          digitalWrite(dirYpin, HIGH); // CW
+          digitalWrite(xpDirLed, HIGH);
+          digitalWrite(xnDirLed, LOW);
+        }
+        if (vx == 0){
+          //digitalWrite(xpDirLed, LOW);
+          digitalWrite(xnDirLed, LOW);
+          digitalWrite(xpDirLed, LOW);
+        }
+        if (vy == 0){
+          //digitalWrite(xpDirLed, LOW);
+          digitalWrite(xnDirLed, LOW);
+          digitalWrite(xpDirLed, LOW);
+        }
+
+    }
+    if (micros() - txLast >= abs(timePerStepX)) {
+      txLast = micros();
+      sigX = !sigX; // Invert signal
+      digitalWrite(stepXpin, sigX); // turn ON or OFF stepPin.
+    }
+    if (micros() - tyLast >= abs(timePerStepY)) {
+      tyLast = micros();
+      sigY = !sigY;
+      digitalWrite(stepYpin, sigY);
+
+    }
+
+  }
+
+  //String str4 = "Head position after Circle: x0,y0: " + String(x0) + "," + String(y0);
+  //Serial.println(str4);
+}
+
+void drawSine(float xcenter, float ycenter, float r) {
+  // In absolute coordinates, (0,0) upper left like a web page.
+  liftPen();
+  // Move to xy_start in absolute coordinates.
+  //moveHeadTo(xcenter+radius, ycenter); // NB! + radius of circle!
+  
+  // For testing purposes, set absolute pixel positions manually to start drawing directly from start position.
+  //setAbsoluteCoordinates(xcenter+r,ycenter);
+  
+  // Move along circle of radius r.
+  // 1) Divide circle into segments based on lengt of circumference and resolution limit.
+  // Length og line segment = 5 mm for first try.
+  float segment_length = 5;  // Default 24 for circle with r = 30 mm
+  float n_segments = (2*PI*r)/segment_length;
+  byte n = ceil(n_segments);
+  Serial.print("n_segments Circle: ");
+  Serial.println(n);
+  double v = 10.0;
+  double dt = 1000 * 1000 * 2*PI*r / v; // microseconds
+  double t = 0;
+
+  // Initialize x0 and y0, radius as pixel values. NB! 1/16-stepping needs factor 4 in number of pixels.
+  unsigned int x0_px = round(xcenter / (xCalibration / 5000)); // Pixel-position of center of circle.
+  unsigned int y0_px = round(ycenter / (yCalibration / 5000));
+  radius = round(r / stepLengthX);
+  x0 = x0_px + radius;
+  y0 = y0_px;
+  String target = "x0,y0: " + String(x0) + "," + String(y0);
+  //Serial.println(target);
+  //Serial.print("dt:");
+  //Serial.println(abs(dt));
+
+  // Run a timer loop which updates the speed every dt seconds.
+  // Calculate speed in x- and y-direction from speedvectors while running a loop
+  /*
+    Example circle 1:
+    r = 30 mm
+    v = 20 mm/s
+    n = 38 segments (updates)
+    vx(t) = -v*sin(v/r * t) = -20*sin(2*t / 3)
+    vy(t) = v*cos(v/r * t) = 20*cos(2*t / 3)
+  */
+  bool isRunning = true;
+  bool sigX = true; // pulse ON or OFF
+  bool sigY = true;
+  dt = 0.01 * 1000000;
+  unsigned int sineCounter = 0;
+  while (sineCounter <= 10000) {
+    if (micros() - lastUpdate >= abs(dt)) {
+      sineCounter += 1;
+      lastUpdate = micros();
+      t = t + (dt/1000000);
+      //Serial.println("Updates speeds");
+      vx = 3; // constant speed positive direction.
+      vy = 1.5*v*cos(v*t / r);
       // Update timings for each speed
       double vx_px = vx / stepLengthX; // mm/s / mm/step = steps/s
       timePerStepX = 1000000 / vx_px;  // 1000000us / steps/s = s/step

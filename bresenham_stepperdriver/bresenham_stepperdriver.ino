@@ -109,8 +109,10 @@ void setup() {
 
   for (int i=0; i<5; i++) {
     //drawCircle(50,50,radius); 
-    drawCircleVectorSpeed(50,50,radius);
+    //drawCircleVectorSpeed(50,50,radius);
   }
+
+  drawSine(50,50,radius);
 
 
   

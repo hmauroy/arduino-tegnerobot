@@ -213,7 +213,7 @@ void runSteppers(int nx, int ny, double timePerStepX, double timePerStepY) {
       // Pulse steppers N times. Quick calculation: 2 deg move => N = 2 deg / 0.043945 deg/rot = 45.51 steps.
       // 20 pulses * 350 us total time/pulse = 7000 us = 7 ms.
       // Change timings to a shorter one.
-      changeStepperSpeed(true, pauseX, 5);
+      //changeStepperSpeed(true, pauseX, 5);
       xdirLast = 1;
     }
   }
@@ -223,7 +223,7 @@ void runSteppers(int nx, int ny, double timePerStepX, double timePerStepY) {
     if (xdirLast == 1) {
       // Direction change from negative movement!
       // Pulse steppers N times. Quick calculation: 2 deg move => N = 2 deg / 0.043945 deg/rot = 45.51 steps.
-      changeStepperSpeed(true, pauseX, 5);
+      //changeStepperSpeed(true, pauseX, 5);
       xdirLast = -1;
     }
   }
@@ -285,10 +285,6 @@ void runSteppers(int nx, int ny, double timePerStepX, double timePerStepY) {
         txLast = micros();
         if (sigX == false) {
           nx -= 1;
-          highSpeedCounterX += 1; // One more step has occured.
-          if (highSpeedCounterX > maxHighSpeedStepsX) {
-            pauseX = oldPauseX;
-          }
         }
       }
       else {
@@ -307,7 +303,6 @@ void runSteppers(int nx, int ny, double timePerStepX, double timePerStepY) {
         tyLast = micros();
         if (sigY == false) {
           ny -= 1;
-          highSpeedCounterY += 1; // One more step has occured.
         }
       }
       else {
