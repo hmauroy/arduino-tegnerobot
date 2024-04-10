@@ -41,8 +41,6 @@ void moveHeadTo(float targetX, float targetY, double pulse_length) {
   */
   dx = targetX - x0;
   dy = targetY - y0;
-
-  shapeNotStarted = true;
   
   // Calculate distances (number of steps) and timePerStep and save to global variables..
   //calcTimePerStep(dx, dy);
@@ -88,7 +86,6 @@ void moveHeadTo(float targetX, float targetY, double pulse_length) {
 }
 
 void drawCircle(float xcenter, float ycenter, float r) {
-  shapeNotStarted = true;
   liftPen();
   // Move to xy_start.
   //moveHeadTo(xcenter+radius, ycenter); // NB! + radius of circle!
@@ -206,25 +203,8 @@ timePerStepY: time per step in microseconds for ystepper.
 void runSteppers(int nx, int ny, double timePerStepX, double timePerStepY) {
   String dirX = "CW";
   String dirY = "CCW";
-  int pauseX = int(round(timePerStepX/2));  // Divide by 2 because step signal is 2 x delayMicroseconds.
-  int pauseY = int(round(timePerStepY/2));
-  int nSlakk = 5;
-  if (shapeNotStarted) {
-    // Runs only for the first segment of a line or a geometric object
-    shapeNotStarted = false;
-    if (nx > 0) {
-      xdirLast = 1;
-    }
-    else {
-      xdirLast = -1;
-    }
-    if (ny > 0) {
-      ydirLast = 1;
-    }
-    else {
-      ydirLast = -1;
-    }
-  }
+  pauseX = int(round(timePerStepX/2));  // Divide by 2 because step signal is 2 x delayMicroseconds.
+  pauseY = int(round(timePerStepY/2));
   if (nx > 0) {
     digitalWrite(dirXpin, HIGH); // Set the spinning direction clockwise (x- and y-axis are wired opposite at the moment).
     dirX = "CW";
@@ -232,7 +212,8 @@ void runSteppers(int nx, int ny, double timePerStepX, double timePerStepY) {
       // Direction change from negative movement!
       // Pulse steppers N times. Quick calculation: 2 deg move => N = 2 deg / 0.043945 deg/rot = 45.51 steps.
       // 20 pulses * 350 us total time/pulse = 7000 us = 7 ms.
-      //pulseSteppers(true, nSlakk); // true=x, false=y. Do not need direction. It is already set above with digitalWrite.
+      // Change timings to a shorter one.
+      changeStepperSpeed(true, pauseX, 5);
       xdirLast = 1;
     }
   }
@@ -242,7 +223,7 @@ void runSteppers(int nx, int ny, double timePerStepX, double timePerStepY) {
     if (xdirLast == 1) {
       // Direction change from negative movement!
       // Pulse steppers N times. Quick calculation: 2 deg move => N = 2 deg / 0.043945 deg/rot = 45.51 steps.
-      //pulseSteppers(true, nSlakk);
+      changeStepperSpeed(true, pauseX, 5);
       xdirLast = -1;
     }
   }
@@ -255,7 +236,7 @@ void runSteppers(int nx, int ny, double timePerStepX, double timePerStepY) {
     if (ydirLast == -1) {
       // Direction change from negative movement!
       // Pulse steppers N times. Quick calculation: 2 deg move => N = 2 deg / 0.043945 deg/rot = 45.51 steps.
-      //pulseSteppers(false, nSlakk);
+      //changeStepperSpeed(false, pauseY, 30);
       ydirLast = 1;
     }
   }
@@ -265,7 +246,7 @@ void runSteppers(int nx, int ny, double timePerStepX, double timePerStepY) {
     if (ydirLast == 1) {
       // Direction change from negative movement!
       // Pulse steppers N times. Quick calculation: 2 deg move => N = 2 deg / 0.043945 deg/rot = 45.51 steps.
-      //pulseSteppers(false, nSlakk);
+      //changeStepperSpeed(false, pauseY, 30);
       ydirLast = -1;
     }
   }
@@ -304,6 +285,10 @@ void runSteppers(int nx, int ny, double timePerStepX, double timePerStepY) {
         txLast = micros();
         if (sigX == false) {
           nx -= 1;
+          highSpeedCounterX += 1; // One more step has occured.
+          if (highSpeedCounterX > maxHighSpeedStepsX) {
+            pauseX = oldPauseX;
+          }
         }
       }
       else {
@@ -322,6 +307,7 @@ void runSteppers(int nx, int ny, double timePerStepX, double timePerStepY) {
         tyLast = micros();
         if (sigY == false) {
           ny -= 1;
+          highSpeedCounterY += 1; // One more step has occured.
         }
       }
       else {
@@ -336,6 +322,25 @@ void runSteppers(int nx, int ny, double timePerStepX, double timePerStepY) {
   } // End while loop
   //Serial.println("Finished runSteppers()");
 } // END runSteppers()
+
+void changeStepperSpeed(bool xaxis, int pause, int maxSteps) {
+  String info = "ChangeSpeed, xaxis, pause, maxSteps: " + String(xaxis) + "," + String(pause) + "," + String(maxSteps);
+  Serial.println(info);
+  if (xaxis) {
+    oldPauseX = abs(pause);
+    pauseX = 500;
+    // Reset counter to go back to normal speed after N steps.
+    highSpeedCounterX = 0;
+    maxHighSpeedStepsX = maxSteps;
+  }
+  else {
+    oldPauseY = abs(pause);
+    pauseY = 500;
+    highSpeedCounterY = 0;
+    maxHighSpeedStepsY = maxSteps;
+  }
+  
+}
 
 void pulseSteppers(bool xAxis, int n) {
   Serial.println("Pulses steppers!");

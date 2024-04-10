@@ -48,9 +48,16 @@ int n_stepsY = 0;
 double timePerStepX = 6000;
 double timePerStepY = 6000;
 
-int xdirLast = 1; // Stores last direction from last movement.
+int xdirLast = 1; // Stores last direction from last movement. Always positive from start.
 int ydirLast = 1;
-bool shapeNotStarted = true;
+int pauseX = 3000;
+int pauseY = 3000;
+int oldPauseX = 3000;
+int oldPauseY = 3000;
+int highSpeedCounterX = 0;
+int highSpeedCounterY = 0;
+int maxHighSpeedStepsX = 0;
+int maxHighSpeedStepsY = 0;
 
 
 void setup() {
