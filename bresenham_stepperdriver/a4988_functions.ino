@@ -36,21 +36,14 @@ void moveHeadTo(float targetX, float targetY) {
   runSteppersBres(round(targetX), round(targetY));
 }
 
-void moveHeadTo_2(float targetX, float targetY) {
-  // Wrapper function that will be the one always responsible for movement to absolute position in mm coordinates.
-  double x_distance = targetX - x;
-  x = targetX;
-  double y_distance = targetY - y;
-  y = targetY;
-
-  runSteppersBres(targetX, targetY);
-}
 
 void runSteppersBres(float targetX, float targetY) {
   // TargetX and targetY are in pixel-coordinates
   // Coordinate system is 0,0 upper left!
   x1 = int(targetX);
   y1 = int(targetY);
+  xLast = x0; // Saves last position before movement
+  yLast = y0;
   dx = abs(x1 - x0);
   dy = -abs(y1 - y0);
   err = dx + dy;
@@ -82,18 +75,16 @@ void runSteppersBres(float targetX, float targetY) {
         pulseOn = !pulseOn; // Flips logic.
         digitalWrite(stepXpin, LOW);
         digitalWrite(stepYpin, LOW);
-        digitalWrite(xpDirLed, LOW);
-        digitalWrite(xnDirLed, LOW);
       }
       else {
         lastTime = micros();
         if (x_step < 0) {
           digitalWrite(dirXpin, HIGH); // CW
-          digitalWrite(xnDirLed, HIGH);
+          
         }
         else {
           digitalWrite(dirXpin, LOW); // CCW
-          digitalWrite(xpDirLed, HIGH);
+          
         }
         if (y_step < 0) {
           digitalWrite(dirYpin, LOW); // CCW
@@ -101,15 +92,13 @@ void runSteppersBres(float targetX, float targetY) {
         else {
           digitalWrite(dirYpin, HIGH); // CW
         }
-        if (x_step == 0){
-          digitalWrite(xpDirLed, LOW);
-          digitalWrite(xnDirLed, LOW);
-        }
+
+        // Turns puls on or off. NB! Only 1 pulse/pixel.
         //digitalWrite(stepXpin, abs(x_step)); // writes either a 1 (HIGH) or 0 (LOW) dependent on result from bresenham. dx can be +1, -1, 0.
         //digitalWrite(stepYpin, abs(y_step));
         pulseOn = !pulseOn; // flips logic
         
-        // Pulse steppers multiple times for one pixel movement. Needs microstepping.
+        // Pulse steppers multiple times for one pixel movement. Needs higher microstepping if more than 1 pulse/pixel.
         pulseSteppers(abs(x_step), abs(y_step), 1);
         // Calculate next step while we wait for next update.
         isDrawing = bresenham();
@@ -142,7 +131,7 @@ void pulseSteppers(bool x, bool y, int n) {
   for (int i=0; i<n; i++) {
     digitalWrite(stepXpin, x);
     digitalWrite(stepYpin, y);
-    delayMicroseconds(50);
+    delayMicroseconds(timePerStep);
     digitalWrite(stepXpin, LOW);
     digitalWrite(stepYpin, LOW);
     // Sleep for pulse off time
@@ -206,17 +195,17 @@ void drawCircle(float xcenter, float ycenter, float r) {
   // Move along circle of radius r.
   // 1) Divide circle into segments based on lengt of circumference and resolution limit.
   // Length og line segment = 5 mm for first try.
-  float segment_length = 4;  // Default 24 for circle with r = 30 mm
+  float segment_length = 2;  // Default 24 for circle with r = 30 mm
   float n_segments = (2*PI*r)/segment_length;
   byte n = ceil(n_segments);
-  Serial.print("n_segments Circle: ");
-  Serial.println(n);
+  String circleInfo = "segmentLengt = " + String(segment_length) + ", n_segments = " + String(n);
+  Serial.println(circleInfo);
   float d_theta = 2*PI/n;
   float theta = 0;
 
   // Initialize x0 and y0, radius as pixel values
-  unsigned int x0_px = round(xcenter / (xCalibration / 5000)); // Pixel-position of center of circle.
-  unsigned int y0_px = round(ycenter / (yCalibration / 5000));
+  x0_px = round(xcenter / (xCalibration / 5000)); // Pixel-position of center of circle.
+  y0_px = round(ycenter / (yCalibration / 5000));
   radius = round(r / (xCalibration / 5000));
   x0 = x0_px + radius;
   y0 = y0_px;
@@ -236,9 +225,13 @@ void drawCircle(float xcenter, float ycenter, float r) {
     theta = theta + d_theta;
     x = radius * cos(theta) + x0_px;
     y = radius * sin(theta) + y0_px;
-    //String target = "Target x_new,y_new: " + String(x_new) + "," + String(y_new);
-    String target = String(x) + "," + String(y);
-    //Serial.println(target);
+    //String target = "xLast,yLast,x0,y0,x1,y1: " + String(xLast) + "," + String(yLast) + "," + String(x0) + "," + String(y0) + "," + String(x) + "," + String(y);
+    //String target = "xLast,x0,x1: " + String(xLast) + "," + String(x0) + "," + String(x);
+    String target = "yLast,y0,y1: " + String(yLast) + "," + String(y0) + "," + String(y);
+    //String target = String(x) + "," + String(y);
+    Serial.println(target);
+
+    handleDirectionChange();  // Checks for direction change to remove excessive play in gearbox
     
     // Move using bresenham-stepper
     moveHeadTo(x, y);
@@ -252,6 +245,64 @@ void drawCircle(float xcenter, float ycenter, float r) {
   }
   String str4 = "Head position after Circle: x0,y0: " + String(x0) + "," + String(y0);
   Serial.println(str4);
+}
+
+void handleDirectionChange() {
+  // xLast ----- x0 ------ x1    => Continues direction
+  // xLast ---- x1 ----- x0      => Direction change towards LEFT
+  // x0 ---- x1 ----- xLast      => Direction change towards RIGHT
+  // x1 ---- x0 ----- xLast      => Continues direction
+  // New logic!
+  int dx_last = x0 - xLast; // Last move
+  int dx_next = x - x0;  // Current move
+  int dy_last = y0 - yLast; // Last move
+  int dy_next = y - y0;  // Current move
+  // Må ha en variabel for å spare på forrige posisjon.
+  // X-axis
+  if (dx_last > 0 && dx_next < 0) {  // Last move was RIGHT and next is LEFT we have a change.
+    Serial.println("Direction change LEFT");
+    spoolStepper(true, -1);
+    digitalWrite(xpDirLed, LOW);
+    digitalWrite(xnDirLed, HIGH);
+  }
+  else if (x0 < x && x < xLast) {
+    Serial.println("Direction change RIGHT");
+    spoolStepper(true, 1);
+    digitalWrite(xpDirLed, HIGH);
+    digitalWrite(xnDirLed, LOW);
+  }
+  // Y-axis
+  if (dy_last > 0 && dy_next < 0) {
+    Serial.println("Direction change UP");
+    spoolStepper(false, -1);
+  }
+  else if (dy_last < 0 && dy_next > 0) {
+    Serial.println("Direction change DOWN");
+    spoolStepper(false, 1);
+  }
+}
+
+void spoolStepper(bool xaxis, int direction) {
+  // pulseSteppers(bool x, bool y, int n)
+  if (xaxis) {
+    if (direction > 0) {
+      digitalWrite(dirXpin, LOW);
+    }
+    else {
+      digitalWrite(dirXpin, HIGH);
+    }
+    pulseSteppers(1, 0, 40);
+  }
+  if (!xaxis) {
+    if (direction > 0) {
+      digitalWrite(dirYpin, HIGH);
+    }
+    else {
+      digitalWrite(dirYpin, LOW);
+    }
+    pulseSteppers(0, 1, 40);
+  }
+  
 }
 
 
@@ -365,7 +416,68 @@ void drawCircleVectorSpeed(float xcenter, float ycenter, float r) {
   //Serial.println(str4);
 }
 
+
 void drawSine(float xcenter, float ycenter, float r) {
+  // In absolute coordinates, (0,0) upper left like a web page.
+  liftPen();
+
+  // Draw 150 mm
+
+  // 1) Divide circle into segments based on lengt of circumference and resolution limit.
+  // Length og line segment = 5 mm for first try.
+  float segment_length = 2;  // Default 24 for circle with r = 30 mm
+  float n_segments = (2*PI*r)/segment_length;
+  byte n = ceil(n_segments);
+  String circleInfo = "segmentLengt = " + String(segment_length) + ", n_segments = " + String(n);
+  Serial.println(circleInfo);
+  float d_theta = 2*PI/n;
+  float theta = 0;
+
+  // Initialize x0 and y0, radius as pixel values
+  x0_px = round(xcenter / (xCalibration / 5000)); // Pixel-position of center of circle.
+  y0_px = round(ycenter / (yCalibration / 5000));
+  radius = round(r / (xCalibration / 5000));
+  x0 = x0_px + radius;
+  y0 = y0_px;
+  String target = "x0,y0: " + String(x0) + "," + String(y0);
+  Serial.println(target);
+
+
+  // 2) Run for loop of n line segments.
+  for (byte i=0; i < n; i++) {
+    /*
+    Serial.println("--------------");
+    Serial.print("segment: ");
+    Serial.print(i+1);
+    Serial.print(": ");
+    String positions = "x0,y0: " + String(x0) + "," + String(y0);
+    Serial.println(positions);*/
+    theta = theta + d_theta;
+    x = radius * cos(theta) + x0_px;
+    y = radius * sin(theta) + y0_px;
+    //String target = "xLast,yLast,x0,y0,x1,y1: " + String(xLast) + "," + String(yLast) + "," + String(x0) + "," + String(y0) + "," + String(x) + "," + String(y);
+    //String target = "xLast,x0,x1: " + String(xLast) + "," + String(x0) + "," + String(x);
+    String target = "yLast,y0,y1: " + String(yLast) + "," + String(y0) + "," + String(y);
+    //String target = String(x) + "," + String(y);
+    Serial.println(target);
+
+    handleDirectionChange();  // Checks for direction change to remove excessive play in gearbox
+    
+    // Move using bresenham-stepper
+    moveHeadTo(x, y);
+    
+
+    // Update integer coordinates
+    //x0 = x_new;
+    //y0 = y_new;
+    
+
+  }
+  String str4 = "Head position after Circle: x0,y0: " + String(x0) + "," + String(y0);
+  Serial.println(str4);
+}
+
+void drawSineVectorSpeed(float xcenter, float ycenter, float r) {
   // In absolute coordinates, (0,0) upper left like a web page.
   liftPen();
   // Move to xy_start in absolute coordinates.
