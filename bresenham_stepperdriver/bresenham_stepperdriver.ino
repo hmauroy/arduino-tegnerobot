@@ -51,10 +51,10 @@ int x1 = 0; // Target position in pixel values for Bresenham.
 int y1 = 0;
 unsigned int x0_px = 0; // Pixel value of a coordinate
 unsigned int y0_px = 0;
-int xLast = 6192; // Last position before movement using Bresenham. Used for calculation of direction change.
-int yLast = 4032; // Last position before movement using Bresenham.
-float x = 0; // Position in px.
-float y = 0; // Position in px.
+int xLast = 0; // Last position before movement using Bresenham. Used for calculation of direction change.
+int yLast = 0; // Last position before movement using Bresenham.
+double x = 0; // Position in px.
+double y = 0; // Position in px.
 unsigned int radius = 1;  // pixel coordinates 
 int dx = 0;
 int dy = 0;
@@ -108,8 +108,8 @@ void setup() {
   
 
   int radius = 20;
-  Serial.print("Moves in a circle radius = ");
-  Serial.println(radius);
+  //Serial.print("Moves in a circle radius = ");
+  //Serial.println(radius);
 
   for (int i=0; i<5; i++) {
     //drawCircle(50,50,radius); 
@@ -118,13 +118,18 @@ void setup() {
 
   //drawSine(50,50,radius);
 
-  double sum = calculateIntervalSinewave(3.82, 0, 1, 1, 0);
+  double sum1 = calculateIntervalSinewave(3.82, 0, 1, 1, 0);
 
   double sum2 = calculateLengthSinewave(0,PI,1000, 1, 1, 0);
 
-  Serial.println(sum);
+  Serial.print("sum1 = ");
+  Serial.println(sum1);
 
+  Serial.print("sum2 = ");
   Serial.println(sum2);
+
+  drawSine(0,40,200,20,0.25);
+  drawSine(60,30,100,10,0.25);
 
   
 

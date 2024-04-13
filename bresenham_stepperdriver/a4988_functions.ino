@@ -31,14 +31,14 @@ void lowerPen() {
   lifted = false;
 }
 
-void moveHeadTo(float targetX, float targetY) {
-  // Wrapper function that will be the one always responsible for movement to absolute position in mm coordinates.
-  runSteppersBres(round(targetX), round(targetY));
+void moveHeadTo_old(float targetX, float targetY) {
+  // Wrapper function that will be the one always responsible for movement to absolute position in pixel coordinates.
+  moveHeadTo(round(targetX), round(targetY));
 }
 
 
-void runSteppersBres(float targetX, float targetY) {
-  // TargetX and targetY are in pixel-coordinates
+void moveHeadTo(float targetX, float targetY) {
+  // TargetX and targetY are in pixel-coordinates. Float is accepted as input.
   // Coordinate system is 0,0 upper left!
   x1 = int(targetX);
   y1 = int(targetY);
@@ -417,47 +417,44 @@ void drawCircleVectorSpeed(float xcenter, float ycenter, float r) {
 }
 
 
-void drawSine(float xcenter, float ycenter, float r) {
+void drawSine(double xstart, double ystart, double length, double A, double c) {
   // In absolute coordinates, (0,0) upper left like a web page.
   liftPen();
 
-  // Draw 150 mm
+  // Draw 150 mm long line
+  // Calculate interval
+  double x_end = calculateIntervalSinewave(length,xstart,A,c,0);
+  
 
   // 1) Divide circle into segments based on lengt of circumference and resolution limit.
   // Length og line segment = 5 mm for first try.
   float segment_length = 2;  // Default 24 for circle with r = 30 mm
-  float n_segments = (2*PI*r)/segment_length;
+  float n_segments = length/segment_length;
   byte n = ceil(n_segments);
-  String circleInfo = "segmentLengt = " + String(segment_length) + ", n_segments = " + String(n);
-  Serial.println(circleInfo);
-  float d_theta = 2*PI/n;
-  float theta = 0;
+  String sineInfo = "x_end, " + String(x_end) + ", segmentLengt = " + String(segment_length) + ", n_segments = " + String(n);
+  Serial.println(sineInfo);
 
   // Initialize x0 and y0, radius as pixel values
-  x0_px = round(xcenter / (xCalibration / 5000)); // Pixel-position of center of circle.
-  y0_px = round(ycenter / (yCalibration / 5000));
-  radius = round(r / (xCalibration / 5000));
-  x0 = x0_px + radius;
-  y0 = y0_px;
-  String target = "x0,y0: " + String(x0) + "," + String(y0);
+  x0_px = round(xstart / (xCalibration / 5000)); // Pixel-position of center of circle.
+  y0_px = round(ystart / (yCalibration / 5000));
+  int x_end_px = round(x_end / (xCalibration / 5000));
+  double xstep = abs( (x_end_px - x0_px)/n);
+  double A_px = A / (yCalibration / 5000);
+  double c_px = c * (xCalibration / 5000);
+  double d_px = y0_px;  // d-value is equal to ystart in pixel-space.
+
+  moveHeadTo(x0_px, y0_px); // Move head to starting position in absolute pixel values.
+  String target = "x0,y0,xstep,A_px,c_px: " + String(x0) + "," + String(y0) + "," + String(xstep) + "," + String(A_px)+ "," + String(c_px);;
   Serial.println(target);
 
 
   // 2) Run for loop of n line segments.
   for (byte i=0; i < n; i++) {
-    /*
-    Serial.println("--------------");
-    Serial.print("segment: ");
-    Serial.print(i+1);
-    Serial.print(": ");
-    String positions = "x0,y0: " + String(x0) + "," + String(y0);
-    Serial.println(positions);*/
-    theta = theta + d_theta;
-    x = radius * cos(theta) + x0_px;
-    y = radius * sin(theta) + y0_px;
-    //String target = "xLast,yLast,x0,y0,x1,y1: " + String(xLast) + "," + String(yLast) + "," + String(x0) + "," + String(y0) + "," + String(x) + "," + String(y);
+    x = x0 + xstep;
+    y = d_px + A_px*sin(c_px*x);
+    String target = "xLast,yLast,x0,y0,x1,y1: " + String(xLast) + "," + String(yLast) + "," + String(x0) + "," + String(y0) + "," + String(x) + "," + String(y);
     //String target = "xLast,x0,x1: " + String(xLast) + "," + String(x0) + "," + String(x);
-    String target = "yLast,y0,y1: " + String(yLast) + "," + String(y0) + "," + String(y);
+    //String target = "yLast,y0,y1: " + String(yLast) + "," + String(y0) + "," + String(y);
     //String target = String(x) + "," + String(y);
     Serial.println(target);
 
@@ -473,7 +470,7 @@ void drawSine(float xcenter, float ycenter, float r) {
     
 
   }
-  String str4 = "Head position after Circle: x0,y0: " + String(x0) + "," + String(y0);
+  String str4 = "Head position after Sine: x0,y0: " + String(x0) + "," + String(y0);
   Serial.println(str4);
 }
 
