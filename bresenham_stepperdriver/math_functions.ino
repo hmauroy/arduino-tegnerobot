@@ -57,3 +57,13 @@ double calculateIntervalSinewave(double length, double x0, double A, double c, d
 
   return x;
 }
+
+
+struct Koordinates {
+  double x;
+  double y;
+};
+
+
+
+

@@ -78,6 +78,15 @@ unsigned long tyLast = micros();
 unsigned long lastUpdate = micros();
 
 
+// Bezier variables
+// Defines a class (struct) that can hold multiple values.
+struct Point {
+    float x;
+    float y;
+};
+Point controlPoints[4];
+Point curvePoints[30]; // Array to store computed curve points
+
 
 
 
@@ -128,12 +137,16 @@ void setup() {
   Serial.print("sum2 = ");
   Serial.println(sum2);
 
-  drawSineInterval(0,10,50,10,0.5);
-  drawSineInterval(50,10,70,5,1.5);
-  drawSineInterval(70,10,100,10,1.5);
-  drawSineInterval(0,40,100,20,0.1);
+  // drawSineInterval(0,10,50,10,0.5);
+  // drawSineInterval(50,10,70,5,1.5);
+  // drawSineInterval(70,10,100,10,1.5);
+  // drawSineInterval(0,40,100,20,0.1);
   //drawSineLength(0,40,200,20,0.25);
   //drawSineLength(60,30,100,10,0.25);
+
+  // Bezier
+  
+  drawBezierCurve("c 16 1 1 4 3 16 15 11");
 
   
 
