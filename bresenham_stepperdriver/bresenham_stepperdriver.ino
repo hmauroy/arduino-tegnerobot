@@ -128,8 +128,12 @@ void setup() {
   Serial.print("sum2 = ");
   Serial.println(sum2);
 
-  drawSine(0,40,200,20,0.25);
-  drawSine(60,30,100,10,0.25);
+  drawSineInterval(0,10,50,10,0.5);
+  drawSineInterval(50,10,70,5,1.5);
+  drawSineInterval(70,10,100,10,1.5);
+  drawSineInterval(0,40,100,20,0.1);
+  //drawSineLength(0,40,200,20,0.25);
+  //drawSineLength(60,30,100,10,0.25);
 
   
 

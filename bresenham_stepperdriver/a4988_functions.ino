@@ -416,8 +416,56 @@ void drawCircleVectorSpeed(float xcenter, float ycenter, float r) {
   //Serial.println(str4);
 }
 
+void drawSineInterval(double xstart, double ystart, double x_end, double A, double c) {
+  // In absolute coordinates, (0,0) upper left like a web page.
+  liftPen();
 
-void drawSine(double xstart, double ystart, double length, double A, double c) {
+
+  // Divide curve into segments.
+  double length = calculateLengthSinewave(0,50,1000,A,c,0);
+  float segment_length = 2;  // Bresenham draws nice curves of 2 mm length.
+  float n_segments = length/segment_length;
+  byte n = ceil(n_segments);
+  String sineInfo = "x_end, " + String(x_end) + ", segmentLengt = " + String(segment_length) + ", n_segments = " + String(n);
+  Serial.println(sineInfo);
+
+  // Initialize x0 and y0, radius as pixel values
+  x0_px = round(xstart / (xCalibration / 5000)); // Pixel-position of center of circle.
+  y0_px = round(ystart / (yCalibration / 5000));
+  int x_end_px = round(x_end / (xCalibration / 5000));
+  double xstep = abs( (x_end_px - x0_px)/n);
+  double A_px = A / (yCalibration / 5000);
+  double c_px = c * (xCalibration / 5000);
+  double d_px = y0_px;  // d-value is equal to ystart in pixel-space.
+
+  moveHeadTo(x0_px, y0_px); // Move head to starting position in absolute pixel values.
+  lowerPen();
+  String target = "x0,y0,xstep,A_px,c_px: " + String(x0) + "," + String(y0) + "," + String(xstep) + "," + String(A_px)+ "," + String(c_px);;
+  Serial.println(target);
+
+
+  // 2) Run for loop of n line segments.
+  for (byte i=0; i < n; i++) {
+    x = x0 + xstep;
+    y = d_px + A_px*sin(c_px*x);
+    String target = "xLast,yLast,x0,y0,x1,y1: " + String(xLast) + "," + String(yLast) + "," + String(x0) + "," + String(y0) + "," + String(x) + "," + String(y);
+    //String target = "xLast,x0,x1: " + String(xLast) + "," + String(x0) + "," + String(x);
+    //String target = "yLast,y0,y1: " + String(yLast) + "," + String(y0) + "," + String(y);
+    //String target = String(x) + "," + String(y);
+    Serial.println(target);
+
+    
+    // Move using bresenham-stepper
+    moveHeadTo(x, y);
+    
+
+  }
+  String str4 = "Head position after Sine: x0,y0: " + String(x0) + "," + String(y0);
+  Serial.println(str4);
+}
+
+
+void drawSineLength(double xstart, double ystart, double length, double A, double c) {
   // In absolute coordinates, (0,0) upper left like a web page.
   liftPen();
 
@@ -435,38 +483,35 @@ void drawSine(double xstart, double ystart, double length, double A, double c) {
   Serial.println(sineInfo);
 
   // Initialize x0 and y0, radius as pixel values
-  x0_px = round(xstart / (xCalibration / 5000)); // Pixel-position of center of circle.
+  x0_px = round(xstart / (xCalibration / 5000)); // Pixel-position of start of curve.
   y0_px = round(ystart / (yCalibration / 5000));
   int x_end_px = round(x_end / (xCalibration / 5000));
   double xstep = abs( (x_end_px - x0_px)/n);
   double A_px = A / (yCalibration / 5000);
   double c_px = c * (xCalibration / 5000);
   double d_px = y0_px;  // d-value is equal to ystart in pixel-space.
+  x = 0;
+  y = d_px;
 
   moveHeadTo(x0_px, y0_px); // Move head to starting position in absolute pixel values.
+  lowerPen();
   String target = "x0,y0,xstep,A_px,c_px: " + String(x0) + "," + String(y0) + "," + String(xstep) + "," + String(A_px)+ "," + String(c_px);;
   Serial.println(target);
 
 
   // 2) Run for loop of n line segments.
   for (byte i=0; i < n; i++) {
-    x = x0 + xstep;
-    y = d_px + A_px*sin(c_px*x);
+    x = x + xstep;
+    y = A_px*sin(c_px*x);
     String target = "xLast,yLast,x0,y0,x1,y1: " + String(xLast) + "," + String(yLast) + "," + String(x0) + "," + String(y0) + "," + String(x) + "," + String(y);
     //String target = "xLast,x0,x1: " + String(xLast) + "," + String(x0) + "," + String(x);
     //String target = "yLast,y0,y1: " + String(yLast) + "," + String(y0) + "," + String(y);
     //String target = String(x) + "," + String(y);
     Serial.println(target);
 
-    handleDirectionChange();  // Checks for direction change to remove excessive play in gearbox
     
     // Move using bresenham-stepper
-    moveHeadTo(x, y);
-    
-
-    // Update integer coordinates
-    //x0 = x_new;
-    //y0 = y_new;
+    moveHeadTo(x0+x, y0+y);
     
 
   }
