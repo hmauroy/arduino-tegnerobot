@@ -120,9 +120,11 @@ void setup() {
 
   double sum = calculateIntervalSinewave(3.82, 0, 1, 1, 0);
 
-  double sum2 = calculateLengthSinewave(0,PI,1000);
+  double sum2 = calculateLengthSinewave(0,PI,1000, 1, 1, 0);
 
   Serial.println(sum);
+
+  Serial.println(sum2);
 
   
 

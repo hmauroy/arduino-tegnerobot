@@ -8,23 +8,23 @@
 
 // Function to calculate the curve length of a sine wave between x = a and x = b
 // chatGPT4 12.04.2024
-double calculateLengthSinewave(double a, double b, int n) {
+double calculateLengthSinewave(double a, double b, int n, double A, double c, double phi) {
   double dx = (b - a) / n;  // Step size
-  double x, sum = 0.0;
+  double x = a;
+  double sum = 0.0;
+  double f_x = 0;
 
   // Calculate the sum of sqrt(1 + cos^2(x)) at each interval
   for (int i = 0; i <= n; ++i) {
-    x = a + i * dx;  // Current x value
-    double f_x = sqrt(1 + cos(x) * cos(x));  // Function value at x
-    
-    if (i == 0 || i == n) {
-      sum += f_x;  // Add only once for the first and last terms
+    f_x = sqrt(1 + c*c * A*A * cos(c*x + phi) * cos(c*x + phi));  // Function value at x
+    x += dx;
+    if (x == x0) {
+      sum += f_x * dx/2.0;  // Add only once for the first term.
     } else {
-      sum += 2 * f_x;  // Add twice for the middle terms
+      sum += 2 * f_x * dx/2.0;  // Add twice for the middle terms
     }
   }
 
-  sum *= dx / 2.0;  // Multiply by dx/2 to complete the trapezoidal rule
 
   return sum;
 }
@@ -41,10 +41,11 @@ double calculateIntervalSinewave(double length, double x0, double A, double c, d
   double dx = length / 1000;  // Step size is 1/1000 of the length
   double x = x0;
   double sum = 0.0;
+  double f_x = 0;
 
   // Use a while loop to calculate the integral up to the "length" wanted.
   while (sum <= length) {
-    double f_x = sqrt(1 + c*c * A*A * cos(c*x + phi) * cos(c*x + phi));  // Function value at x
+    f_x = sqrt(1 + c*c * A*A * cos(c*x + phi) * cos(c*x + phi));  // Function value at x
     x += dx;
     if (x == x0) {
       sum += f_x * dx/2.0;  // Add only once for the first term.
